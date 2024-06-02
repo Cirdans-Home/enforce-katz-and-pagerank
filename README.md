@@ -15,3 +15,6 @@ To obtain the code, you can use Git with the following command:
 git clone git@github.com:Cirdans-Home/enforce-katz-and-pagerank.git
 ```
 This command will not only clone the main repository but also initialize and clone all its submodules; see the next section for some details.
+
+
+Run Test_Katz_Forcing.m in 
