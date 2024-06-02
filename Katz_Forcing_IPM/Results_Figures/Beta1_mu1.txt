@@ -1,0 +1,2 @@
+Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs     & nnz fact & Kendal & RBO \\    
+ 1 ]  & 5664           & 8       & 2.4e-01    & 4.336e+00      & 2634        & 3030          & 12435     & 1.00 &     1.00 \\    

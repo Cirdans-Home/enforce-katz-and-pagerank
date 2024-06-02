@@ -1,0 +1,7 @@
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      gre_1107.mat      &  directed weighted graph     &   1107   & 5664   & 1 \\   
+ The total PPM iterates were: 44, 
+ The total IPPM iterates were: 44, 
+ The total time was: 8.787719e-01 and 4 problems converged.
+ The Stopping tol was: 1.00e-08 
+ 
