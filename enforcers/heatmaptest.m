@@ -8,7 +8,7 @@ fprintf("Test matrices are: \n")
 fprintf("\t%s\n",d.name)
 
 perc = [0.1,0.2,0.3,0.4,0.5];
-betav = [1,0.8,0.6,0.4,0.2];
+betav = [0.8,0.6,0.4,0.2,1];
 
 Pert = NaN(length(d),length(perc),length(betav)); % Value of the Objective
 Time = NaN(length(d),length(perc),length(betav)); % Time To Solution
@@ -57,4 +57,4 @@ for i=1:length(d)
 end
 
 %% Save Results
-save('heatmapresults.mat',Pert,Time,Iter,NNZ,NNZp,NNZn,KTAU)
+save('heatmapresults.mat','Pert','Time','Iter','NNZ','NNZp','NNZn','KTAU')
