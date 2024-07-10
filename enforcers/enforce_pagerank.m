@@ -1,11 +1,13 @@
-function [Delta,varargout] = enforce_katz(A,alpha,muhat,P,beta,tol)
-%ENFORCE_KATZ Given a matrix A and a parameter alpha finds a matrix Delta
+function [Delta,varargout] = enforce_pagerank(A,alpha,muhat,v,P,beta,tol)
+%ENFORCE PAGERANK Given a matrix A and a parameter alpha finds a matrix Delta
 %with pattern P such that:
-%   (I - \alpha(A+\Delta))^{-1}1 = \hat{mu}
-%and \beta \|\Delta\|_F^2 + (1-\beta) \|\Delta\|_1 minimal
+%    (I- alpha ( diag(A1)^{-1}(A+Delta))^T)muhat = (1-alpha)v
+%    Delta 1 = 0
+%    offdiagonal(A+Delta) >=0  
+%    --> and  beta \|\Delta\|_F^2 + (1-beta) \|\Delta\|_1 minimal
 %   INPUT A sparse matrix
-%         alpha such that (I - \alpha A) is invertible
-%         muhat desired vector of scores with entries >= 1
+%         alpha such that A is irreducible
+%         muhat desired vector of pagerank with e^Tmuhat=1
 %         P pattern matrix
 %         beta scalar in (0,1) regulating the objective function
 %         tol tolerance for the IPM Solver
@@ -19,26 +21,41 @@ if nargout >= 2
 end
 
 % General infos
-n = size(A,1);
-print_mode     = 0;
+n                     = size(A,1);
+print_mode     = 3;
 
 % Build the projector
-proj         = pattern_projector(P);  % Projector Onto the Pattern of A
+proj                = pattern_projector(P);  % Projector Onto the Pattern of A
 reduced_size = size(proj,1);
+K                    = commutation(n);
+deg                 = A*ones(n);
+% Indices for free variables, i.e., indices of diagonal elements after
+% pattern projection
+index  = []; 
+for kk  = 1:n
+index  = [index, kk+ (kk-1)*n]; 
+end
+[free_variables,~] = find(proj(:,index));
 
 if beta == 1
     % Solving only with Frobenius norm constraints
-    H = 2*speye(reduced_size);
-    g = (proj*reshape(A,n*n,1));
-    L = kron(muhat.',speye(n))*proj.';
-    b = (1/alpha).*(muhat-1)-A*muhat+L*g;
+    H      = 2*speye(reduced_size);
+    work = spdiags(1./deg,0,n,n)*muhat; 
+    L       = [kron(work.',speye(n))*(K*proj.');...
+                 kron(ones(n,1).',speye(n))*proj.'];
+     g       = reshape(A,n*n,1);
+     g(free_variables) = 0;
+     g        = proj*g;
+
+    b       = [   (1/alpha).*(muhat -(1-alpha).*v) - A.'*(spdiags(1./deg,0,n,n)*muhat)+kron(work.',speye(n))*(K*(proj.'*g) )  ;...
+                kron(ones(n,1).',speye(n))*(proj.'*g) ];
+   
 
     % Running the solver
-    free_variables = [];
     IterStruct     = struct();
-    rho            = 1e-9;
-    delta          = rho;
-    pc_mode        = 2;
+    rho               = 1e-14;
+    delta            = rho;
+    pc_mode     = 2;
     tic;
     [Delta,~,~,Info] = PPM_IPM(-2*g, ...
         L, ...
@@ -54,39 +71,57 @@ if beta == 1
         delta);
     elapstime = toc;
     if nargout >= 2
-        varargout{1}.time       = elapstime;
-        varargout{1}.opt        = Info.opt;
-        varargout{1}.IPMiter    = Info.IPM_It;
+        varargout{1}.time           = elapstime;
+        varargout{1}.opt            = Info.opt;
+        varargout{1}.IPMiter      = Info.IPM_It;
         varargout{1}.primalres  = [Info.NatRes.primal];
-        varargout{1}.dualres    = [Info.NatRes.dual];
-        varargout{1}.compl      = [Info.NatRes.compl];
+        varargout{1}.dualres     = [Info.NatRes.dual];
+        varargout{1}.compl       = [Info.NatRes.compl];
     end
 
     % Recover Matrix and Desired Ranking
     [ival,jval,~] = find(P);
     Delta = Delta -g;
     Delta = sparse(ival,jval,Delta,n,n);
-    % Compute the optimizate Katz centrality
-    if nargout == 3
-        I = speye(n,n);
-        e = ones(n,1);
-        varargout{2} = (I - alpha*(A+Delta))\e;
+    
+
+    % Compute the optimized Pagerank
+    if nargout >= 3
+        I              = speye(n,n);
+        rhat         = min(diag( spdiags(1./deg,0,n,n)*(A+Delta) ));
+        rhat         = 1- alpha*rhat;
+        r              = rhat;
+        if nargout == 4
+          varargout{3} = rhat;
+        end
+        alphahat = 1- (1-alpha)/r;
+        Phat        =  1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(A+Delta))+(r-1).*speye(n) );
+        varargout{2} = (I - alphahat*Phat.')\((1-alphahat).*v) ;
     end
+    
 else
     % Solving with sparsity constraints
     tau = (1-beta)/beta;
     Q   = 2*speye(reduced_size);
-    c   = (proj*reshape(A,n*n,1));
-    L   = kron(muhat.',speye(n))*proj.';
-    b   = [(1/alpha).*(muhat-1)-A*muhat+L*c;-c];
-    H   = blkdiag(Q,sparse(reduced_size,reduced_size),sparse(reduced_size,reduced_size));
-    g   = [-2.*c; tau.*ones(reduced_size,1); tau.*ones(reduced_size,1)];
-    L   = [L, sparse(n,reduced_size), sparse(n,reduced_size);...
-        - speye(reduced_size), speye(reduced_size),      -speye(reduced_size)];
-    % Running the solver
-    free_variables = [];
+    work = spdiags(1./deg,0,n,n)*muhat; 
+    L       = [kron(work.',speye(n))*(K*proj.');...
+                 kron(ones(n,1).',speye(n))*proj.'];
+    
+    
+     c       = reshape(A,n*n,1);
+     c(free_variables) = 0;
+     c        = proj*c; 
+    
+     b       = [   (1/alpha).*(muhat -(1-alpha).*v) - A.'*(spdiags(1./deg,0,n,n)*muhat)+kron(work.',speye(n))*(K*(proj.'*c) )  ;...
+                 kron(ones(n,1).',speye(n))*(proj.'*c) ];
+    b        = [b;-c];
+    H       = blkdiag(Q,sparse(reduced_size,reduced_size),sparse(reduced_size,reduced_size));
+    g        = [-2.*c; tau.*ones(reduced_size,1); tau.*ones(reduced_size,1)];
+    L        = [L, sparse(2*n,reduced_size), sparse(2*n,reduced_size);...
+                 - speye(reduced_size), speye(reduced_size),      -speye(reduced_size)];
+     % Running the solver
     IterStruct=struct();
-    rho            = 1e-9;
+    rho            = 1e-14;
     delta          = rho;
     pc_mode        = 2;
     tic;
@@ -107,16 +142,33 @@ else
     Delta    = Delta(1:reduced_size) -c;
     Delta    = sparse(ival,jval,Delta,n,n);
     % Compute the optimizate Katz centrality
-    if nargout == 3
-        I = speye(n,n);
-        e = ones(n,1);
-        varargout{2} = (I - alpha*(A+Delta))\e;
+    if nargout >= 3
+       I              = speye(n,n);
+        rhat         = min(diag( spdiags(1./deg,0,n,n)*(A+Delta) ));
+        rhat         = 1- alpha*rhat;
+        r              = rhat;
+        if nargout == 4
+          varargout{3} = rhat;
+        end
+        alphahat = 1- (1-alpha)/r;
+        Phat        =  1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(A+Delta))+(r-1).*speye(n) );
+        varargout{2} = (I - alphahat*Phat.')\((1-alphahat).*v) ;
     end
 end
 
 end
 
 %% Computational Routines
+% Commutation Matrix
+function [K] = commutation(n)
+I = reshape(1:n*n, [n, n]); % initialize a matrix of indices of size(A)
+I = I';    % Transpose it
+I = I(:); % vectorize the required indices
+K = speye(n*n); % Initialize an identity matrix
+K = K(I,:); % Re-arrange the rows of the identity matrix
+end
+
+
 function [x,y,z,Info] = PPM_IPM(c,A,b,Q,free_variables,...
     tol,maxit,pc,printlevel,IterStruct,rho,delta)
 %  IPM   Primal-dual Regularized interior-point method with decoupled variables.
@@ -766,8 +818,3 @@ end
 % END OF FILE.
 % ******************************************************************************************************************** %
 end
-
-% ==================================================================================================================== %
-% ******************************************************************************************************************** %
-% END OF FILE
-% ******************************************************************************************************************** %
