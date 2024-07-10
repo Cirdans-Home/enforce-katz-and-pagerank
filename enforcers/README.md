@@ -20,6 +20,23 @@ instances of the problem with the algorithms described in the Paper.
    %          mucheck vector of centralities computed with the perturbed
    %          matrix, in principle should be equal to the muhat entry
    ```
+- `enforce_katz_gurobi.m`
+   ```matlab
+   %ENFORCE_KATZ_GUROBI Given a matrix A and a parameter alpha finds a matrix 
+   %Delta with pattern P such that:
+   %   (I - \alpha(A+\Delta))^{-1}1 = \hat{mu}
+   %and \beta \|\Delta\|_F^2 + (1-\beta) \|\Delta\|_1 minimal
+   %   INPUT A sparse matrix
+   %         alpha such that (I - \alpha A) is invertible
+   %         muhat desired vector of scores with entries >= 1
+   %         P pattern matrix
+   %         beta scalar in (0,1) regulating the objective function
+   %   OUTPUT Delta perturbation matrix
+   %          stat structure containing statistics
+   %          mucheck vector of centralities computed with the perturbed
+   %          matrix, in principle should be equal to the muhat entry
+   %
+   ```
 - `enforce_pagerank_closedform.m`
    ```matlab
    %ENFORCE_PAGERANK_CLOSEDFORM Produces the perturbation in closed form   
@@ -41,3 +58,9 @@ instances of the problem with the algorithms described in the Paper.
 > it can be more useful to consult the specific folders for the two 
 > problems in which the code is separated into the various functions 
 > and more readable.
+
+> [!CAUTION]
+> The `enforce_katz_gurobi.m` uses the [Gurobi](https://www.gurobi.com) solver for the optimization problem
+> it is possible to get an Academic License for it. If you don't want to use, the 
+> `enforce_katz.m` implementation is written in pure Matlab and doesn't require external 
+> tools.

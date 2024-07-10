@@ -52,13 +52,15 @@ if beta == 1
         IterStruct, ...
         rho, ...
         delta);
-    varargout{1}.time       = toc;
-    varargout{1}.opt        = Info.opt;
-    varargout{1}.iter       = Info.ExIt;
-    varargout{1}.IPMiter    = Info.IPM_It;
-    varargout{1}.primalres  = [Info.NatRes.primal];
-    varargout{1}.dualres    = [Info.NatRes.dual];
-    varargout{1}.compl      = [Info.NatRes.compl];
+    elapstime = toc;
+    if nargout >= 2
+        varargout{1}.time       = elapstime;
+        varargout{1}.opt        = Info.opt;
+        varargout{1}.IPMiter    = Info.IPM_It;
+        varargout{1}.primalres  = [Info.NatRes.primal];
+        varargout{1}.dualres    = [Info.NatRes.dual];
+        varargout{1}.compl      = [Info.NatRes.compl];
+    end
 
     % Recover Matrix and Desired Ranking
     [ival,jval,~] = find(P);
@@ -90,13 +92,16 @@ else
     tic;
     [Delta,~,~,Info] = PPM_IPM(g,L,b,H,free_variables,tol,200,...
         pc_mode,print_mode,IterStruct,rho,delta);
-    varargout{1}.time       = toc;
-    varargout{1}.opt        = Info.opt;
-    varargout{1}.iter       = Info.ExIt;
-    varargout{1}.IPMiter    = Info.IPM_It;
-    varargout{1}.primalres  = [Info.NatRes.primal];
-    varargout{1}.dualres    = [Info.NatRes.dual];
-    varargout{1}.compl      = [Info.NatRes.compl];
+    elapstime = toc;
+    if nargout >= 2
+        varargout{1}.time       = elapstime;
+        varargout{1}.opt        = Info.opt;
+        varargout{1}.iter       = Info.ExIt;
+        varargout{1}.IPMiter    = Info.IPM_It;
+        varargout{1}.primalres  = [Info.NatRes.primal];
+        varargout{1}.dualres    = [Info.NatRes.dual];
+        varargout{1}.compl      = [Info.NatRes.compl];
+    end
     % Recover Matrix and Desired Ranking
     [ival,jval,~] = find(P);
     Delta    = Delta(1:reduced_size) -c;
@@ -139,10 +144,10 @@ if (~isequal(size(c),[n,1]) || ~isequal(size(b),[m,1]) )
 end
 
 % Make sure that A is sparse and b, c are full.
-if (~issparse(A)) A = sparse(A); end
-if (~issparse(Q)) Q = sparse(Q); end
-if (issparse(b))  b = full(b);   end
-if (issparse(c))  c = full(c);   end
+if (~issparse(A)); A = sparse(A); end
+if (~issparse(Q)); Q = sparse(Q); end
+if (issparse(b));  b = full(b);   end
+if (issparse(c));  c = full(c);   end
 
 % Set default values for missing parameters.
 if (nargin < 5 || isempty(free_variables)); free_variables = []; end
@@ -179,9 +184,9 @@ end
 D = sum(A.^2,2) + 10;
 Jacobi_Prec = @(x) (1./D).*x;
 NE_fun = @(x) (A*(A_tr*x) + 10.*x);
-x = pcg(NE_fun,b,10^(-8),min(1000,m),Jacobi_Prec);
+[x,~] = pcg(NE_fun,b,10^(-8),min(1000,m),Jacobi_Prec);
 x = A_tr*x;
-y = pcg(NE_fun,A*(c+Q*x),10^(-8),min(1000,m),Jacobi_Prec);
+[y,~] = pcg(NE_fun,A*(c+Q*x),10^(-8),min(1000,m),Jacobi_Prec);
 z = c+ Q*x - A_tr*y;
 % ======================================================================= %
 if (norm(x(pos_vars)) <= 10^(-4))
