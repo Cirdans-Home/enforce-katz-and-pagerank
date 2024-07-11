@@ -25,7 +25,7 @@ fprintf(fileID2,'Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs
 fileID3 = fopen('./Results_Figures/Beta1_mu2.txt','a+');
 fprintf(fileID3,'Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs      & nnz fact & Kendal & RBO \\\\    \n'); 
 
-fileID4 = fopen('./Results_Figures/L1_m2.txt','a+');
+fileID4 = fopen('./Results_Figures/L1_mu2.txt','a+');
 fprintf(fileID4,'Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact & Kendal & RBO \\\\    \n'); 
 
 seed = 1;
