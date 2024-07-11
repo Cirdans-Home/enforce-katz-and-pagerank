@@ -37,6 +37,25 @@ instances of the problem with the algorithms described in the Paper.
    %          matrix, in principle should be equal to the muhat entry
    %
    ```
+- `enforce_pagerank.m`
+   ```matlab
+   %ENFORCE PAGERANK Given a matrix A and a parameter alpha finds a matrix Delta
+   %with pattern P such that:
+   %    (I- alpha ( diag(A1)^{-1}(A+Delta))^T)pihat = (1-alpha)v
+   %    Delta 1 = 0
+   %    offdiagonal(A+Delta) >=0
+   %    --> and  beta \|\Delta\|_F^2 + (1-beta) \|\Delta\|_1 minimal
+   %   INPUT A sparse matrix
+   %         alpha such that A is irreducible
+   %         pihat desired vector of pagerank with e^Tpihat=1
+   %         P pattern matrix
+   %         beta scalar in (0,1) regulating the objective function
+   %         tol tolerance for the IPM Solver
+   %   OUTPUT Delta perturbation matrix
+   %          stat structure containing statistics
+   %          picheck vector of centralities computed with the perturbed
+   %          matrix, in principle should be equal to the pihat entry
+   ```
 - `enforce_pagerank_closedform.m`
    ```matlab
    %ENFORCE_PAGERANK_CLOSEDFORM Produces the perturbation in closed form   

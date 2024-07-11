@@ -1,27 +1,27 @@
-function [Delta,varargout] = enforce_pagerank(A,alpha,muhat,v,P,beta,tol)
+function [Delta,varargout] = enforce_pagerank(A,alpha,pihat,v,P,beta,tol)
 %ENFORCE PAGERANK Given a matrix A and a parameter alpha finds a matrix Delta
 %with pattern P such that:
-%    (I- alpha ( diag(A1)^{-1}(A+Delta))^T)muhat = (1-alpha)v
+%    (I- alpha ( diag(A1)^{-1}(A+Delta))^T)pihat = (1-alpha)v
 %    Delta 1 = 0
-%    offdiagonal(A+Delta) >=0  
+%    offdiagonal(A+Delta) >=0
 %    --> and  beta \|\Delta\|_F^2 + (1-beta) \|\Delta\|_1 minimal
 %   INPUT A sparse matrix
 %         alpha such that A is irreducible
-%         muhat desired vector of pagerank with e^Tmuhat=1
+%         pihat desired vector of pagerank with e^Tpihat=1
 %         P pattern matrix
 %         beta scalar in (0,1) regulating the objective function
 %         tol tolerance for the IPM Solver
 %   OUTPUT Delta perturbation matrix
 %          stat structure containing statistics
-%          mucheck vector of centralities computed with the perturbed
-%          matrix, in principle should be equal to the muhat entry
+%          picheck vector of centralities computed with the perturbed
+%          matrix, in principle should be equal to the pihat entry
 
 if nargout >= 2
     varargout{1} = struct();
 end
 
 % General infos
-n                     = size(A,1);
+n              = size(A,1);
 print_mode     = 3;
 
 % Build the projector
@@ -31,25 +31,24 @@ K                    = commutation(n);
 deg                 = A*ones(n);
 % Indices for free variables, i.e., indices of diagonal elements after
 % pattern projection
-index  = []; 
-for kk  = 1:n
-index  = [index, kk+ (kk-1)*n]; 
-end
+kk    = 1:n;
+index = kk+(kk-1)*n;
+
 [free_variables,~] = find(proj(:,index));
 
 if beta == 1
     % Solving only with Frobenius norm constraints
     H      = 2*speye(reduced_size);
-    work = spdiags(1./deg,0,n,n)*muhat; 
+    work = spdiags(1./deg,0,n,n)*pihat;
     L       = [kron(work.',speye(n))*(K*proj.');...
-                 kron(ones(n,1).',speye(n))*proj.'];
-     g       = reshape(A,n*n,1);
-     g(free_variables) = 0;
-     g        = proj*g;
+        kron(ones(n,1).',speye(n))*proj.'];
+    g       = reshape(A,n*n,1);
+    g(free_variables) = 0;
+    g        = proj*g;
 
-    b       = [   (1/alpha).*(muhat -(1-alpha).*v) - A.'*(spdiags(1./deg,0,n,n)*muhat)+kron(work.',speye(n))*(K*(proj.'*g) )  ;...
-                kron(ones(n,1).',speye(n))*(proj.'*g) ];
-   
+    b       = [   (1/alpha).*(pihat -(1-alpha).*v) - A.'*(spdiags(1./deg,0,n,n)*pihat)+kron(work.',speye(n))*(K*(proj.'*g) )  ;...
+        kron(ones(n,1).',speye(n))*(proj.'*g) ];
+
 
     % Running the solver
     IterStruct     = struct();
@@ -83,43 +82,43 @@ if beta == 1
     [ival,jval,~] = find(P);
     Delta = Delta -g;
     Delta = sparse(ival,jval,Delta,n,n);
-    
 
-    % Compute the optimized Pagerank
+
+    % Compute the optimized PageRank centrality
     if nargout >= 3
         I              = speye(n,n);
         rhat         = min(diag( spdiags(1./deg,0,n,n)*(A+Delta) ));
         rhat         = 1- alpha*rhat;
         r              = rhat;
         if nargout == 4
-          varargout{3} = rhat;
+            varargout{3} = rhat;
         end
         alphahat = 1- (1-alpha)/r;
         Phat        =  1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(A+Delta))+(r-1).*speye(n) );
         varargout{2} = (I - alphahat*Phat.')\((1-alphahat).*v) ;
     end
-    
+
 else
     % Solving with sparsity constraints
     tau = (1-beta)/beta;
     Q   = 2*speye(reduced_size);
-    work = spdiags(1./deg,0,n,n)*muhat; 
+    work = spdiags(1./deg,0,n,n)*pihat;
     L       = [kron(work.',speye(n))*(K*proj.');...
-                 kron(ones(n,1).',speye(n))*proj.'];
-    
-    
-     c       = reshape(A,n*n,1);
-     c(free_variables) = 0;
-     c        = proj*c; 
-    
-     b       = [   (1/alpha).*(muhat -(1-alpha).*v) - A.'*(spdiags(1./deg,0,n,n)*muhat)+kron(work.',speye(n))*(K*(proj.'*c) )  ;...
-                 kron(ones(n,1).',speye(n))*(proj.'*c) ];
+        kron(ones(n,1).',speye(n))*proj.'];
+
+
+    c       = reshape(A,n*n,1);
+    c(free_variables) = 0;
+    c        = proj*c;
+
+    b       = [   (1/alpha).*(pihat -(1-alpha).*v) - A.'*(spdiags(1./deg,0,n,n)*pihat)+kron(work.',speye(n))*(K*(proj.'*c) )  ;...
+        kron(ones(n,1).',speye(n))*(proj.'*c) ];
     b        = [b;-c];
     H       = blkdiag(Q,sparse(reduced_size,reduced_size),sparse(reduced_size,reduced_size));
     g        = [-2.*c; tau.*ones(reduced_size,1); tau.*ones(reduced_size,1)];
     L        = [L, sparse(2*n,reduced_size), sparse(2*n,reduced_size);...
-                 - speye(reduced_size), speye(reduced_size),      -speye(reduced_size)];
-     % Running the solver
+        - speye(reduced_size), speye(reduced_size),      -speye(reduced_size)];
+    % Running the solver
     IterStruct=struct();
     rho            = 1e-14;
     delta          = rho;
@@ -141,14 +140,14 @@ else
     [ival,jval,~] = find(P);
     Delta    = Delta(1:reduced_size) -c;
     Delta    = sparse(ival,jval,Delta,n,n);
-    % Compute the optimizate Katz centrality
+    % Compute the optimized PageRank centrality
     if nargout >= 3
-       I              = speye(n,n);
+        I              = speye(n,n);
         rhat         = min(diag( spdiags(1./deg,0,n,n)*(A+Delta) ));
         rhat         = 1- alpha*rhat;
         r              = rhat;
         if nargout == 4
-          varargout{3} = rhat;
+            varargout{3} = rhat;
         end
         alphahat = 1- (1-alpha)/r;
         Phat        =  1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(A+Delta))+(r-1).*speye(n) );
@@ -170,7 +169,7 @@ end
 
 
 function [x,y,z,Info] = PPM_IPM(c,A,b,Q,free_variables,...
-    tol,maxit,pc,printlevel,IterStruct,rho,delta)
+    tol,maxit,pc,printlevel,~,rho,delta)
 %  IPM   Primal-dual Regularized interior-point method with decoupled variables.
 %
 %  This is the driver function of an IPM for solving the
@@ -627,7 +626,7 @@ while (iter < maxit)
     if (num_of_pos_vars > 0) % Only if we have non-negativity constraints.
         mu_prev = mu;
         mu = (x(pos_vars)'*z(pos_vars))/num_of_pos_vars;
-        mu_rate = abs((mu-mu_prev)/max(mu,mu_prev));
+        % mu_rate = abs((mu-mu_prev)/max(mu,mu_prev));
     end
     % ================================================================================================================ %
     % Computing the new residuals.
@@ -688,7 +687,7 @@ end
 if (pl >= 2)
     fprintf('    ========  ========  ========');
 end
-if (pl >= 1) fprintf('\n'); end
+if (pl >= 1); fprintf('\n'); end
 end
 
 
@@ -706,11 +705,11 @@ if (pl >= 2)
     fprintf('%8.2e  ', alpha_x);
     fprintf('%8.2e  ', alpha_z);
 end
-if (pl >= 1) fprintf('\n'); end
+if (pl >= 1); fprintf('\n'); end
 end
 
-function [F] = Primal_Dual_Res(x,y,z,pos_vars,...
-    g,A,b,H,mu,...
+function [F] = Primal_Dual_Res(x,y,z,~,...
+    g,A,b,H,~,...
     xk,yk,rho, delta)
 F    = cell(2,1);
 F{1} = H*x+g-A.'*y-z+rho*(x-xk); % xi_d
