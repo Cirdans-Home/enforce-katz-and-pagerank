@@ -252,7 +252,7 @@ for k = 1:length(d)
     else
       fprintf(fileID4,' %d ]  & %d           & %d       & %.1e    & %.3e      & %d        & %d          & %d   &  %.2f     & %.2f  -- Non Opt \\\\ \n',...
                            k,        reduced_size,  IPMiter,    time,       norm(xfinal_L1,"fro"),    full(sum(xfinal_L1(:) > 1e-10)),...
-                           full(sum(xfinal_L1(:) < -1e-10)),        Info_L1.nnz, K_1, rbo_1 ); 
+                           full(sum(xfinal_L1(:) < -1e-10)),        Info_L1.nnz, K_1_L1, rbo_1_L1 ); 
     end
 
     % Print Final Statistics

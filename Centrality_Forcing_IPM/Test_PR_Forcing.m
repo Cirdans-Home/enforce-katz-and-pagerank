@@ -16,19 +16,19 @@ d = dir(fullfile(QP_problems_path,'*.mat'));
 fileID = fopen('./Results_Figures/Dataset_Info.txt','a+');
 fprintf(fileID,'       Problem      &  Type   &   Size   & NNz   & Connected Comp \\\\   \n'); 
 
-fileID1 = fopen('./Results_Figures/Beta1_mu1.txt','a+');
-fprintf(fileID1,'Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs     & nnz fact & Kendal & RBO \\\\    \n'); 
+fileID1 = fopen('./Results_Figures/PR_Beta1_mu1.txt','a+');
+fprintf(fileID1,'Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs     & nnz fact & Kendal & RBO & rhat \\\\    \n'); 
 
-fileID2 = fopen('./Results_Figures/L1_mu1.txt','a+');
-fprintf(fileID2,'Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs     & nnz fact & Kendal & RBO \\\\    \n'); 
+fileID2 = fopen('./Results_Figures/PR_L1_mu1.txt','a+');
+fprintf(fileID2,'Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs     & nnz fact & Kendal & RBO & rhat \\\\    \n'); 
 
-fileID3 = fopen('./Results_Figures/Beta1_mu2.txt','a+');
-fprintf(fileID3,'Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs      & nnz fact & Kendal & RBO \\\\    \n'); 
+fileID3 = fopen('./Results_Figures/PR_Beta1_mu2.txt','a+');
+fprintf(fileID3,'Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs      & nnz fact & Kendal & RBO & rhat \\\\    \n'); 
 
-fileID4 = fopen('./Results_Figures/L1_mu2.txt','a+');
-fprintf(fileID4,'Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact & Kendal & RBO \\\\    \n'); 
+fileID4 = fopen('./Results_Figures/PR_L1_mu2.txt','a+');
+fprintf(fileID4,'Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact & Kendal & RBO & rhat \\\\    \n'); 
 
-seed = 1;
+seed = 10;
 rng(seed)
 total_iters                     = 0;
 total_time                     = 0;
@@ -40,19 +40,22 @@ pc_mode                      = 2;
 print_mode                   = 3;
 problems_converged   = 0;
 plot_fig                         = 0; 
+IterStruct                      = struct();
+rho                               = 1e-15;
+delta                             = rho;
 for k = 1:length(d)
    model       = struct();
    load(fullfile(QP_problems_path,d(k).name));
    model.name = d(k).name
    n = size(Problem.A,1);
-   %% Computation of the "original" Katz centrality
+   %% Computation of the "original" PR centrality
    I        = speye(n,n);
    e       = ones(n,1);
-   rhoA  = eigs(Problem.A,1,"largestabs");
-   rhoA  = abs(rhoA);
-   alpha = 0.5/rhoA;
-   mu     = (I - alpha*Problem.A)\e;
-   %% Generating Target Katz Centralities:
+   alpha = 0.9;
+   v        = (1/n).*e;  % Teleportation
+   deg    = Problem.A*e;
+   mu      = (I - alpha*(spdiags(1./deg,0,n,n)*Problem.A).')\((1-alpha).*v) ;
+   %% Generating Target PR Centralities:
    muhat_1                 =  mu(randperm(n).');
    muhat_2                 = mu;
    [~, max_ind]           = maxk(mu,10);
@@ -60,27 +63,34 @@ for k = 1:length(d)
    muhat_2(max_ind) = mu(min_ind);
    muhat_2(min_ind)  = mu(max_ind);
    
-   %% Pattern of the Perturbation Equals the Pattern of A
-   P                             = spones(Problem.A);
+   %% Pattern of the Perturbation Equals the Pattern of A+I
+   P                             = spones(Problem.A+speye(n));
    proj                         = pattern_projector(P);  % Projector Onto the Pattern of A
    reduced_size          = size(proj,1);
-   
- 
-  fprintf(fileID,'      %s      &  %s     &   %d   & %d   & 1 \\\\   \n', model.name, Problem.kind, n, nnz(P) ); 
+   K                             = commutation(n);
+   index  = []; 
+   for kk  = 1:n
+    index  = [index, kk+ (kk-1)*n]; 
+   end
+   [free_variables,~] = find(proj(:,index));
+   fprintf(fileID,'      %s      &  %s     &   %d   & %d   & 1 \\\\   \n', model.name, Problem.kind, n, nnz(P) ); 
 
 
    %%   ----> muhat_1 <----  Solution -- Without -- Sparsity Constraints --
-   
-   model.H         = 2*speye(reduced_size);
-   model.g          = (proj*reshape(Problem.A,n*n,1));
-   model.L          = kron(muhat_1.',speye(n))*proj.';
-   model.b          = (1/alpha).*(muhat_1-1)-Problem.A*muhat_1+model.L*model.g;
+   model.H      = 2*speye(reduced_size);
+    work           = spdiags(1./deg,0,n,n)*muhat_1; 
+    model.L      = [kron(work.',speye(n))*(K*proj.');...
+                           kron(ones(n,1).',speye(n))*proj.'];
+     model.g     = reshape(Problem.A,n*n,1);
+     model.g(free_variables) = 0;
+     model.g     = proj*model.g;
+
+    model.b      = [   (1/alpha).*(muhat_1 -(1-alpha).*v) - ...
+                               Problem.A.'*(spdiags(1./deg,0,n,n)*muhat_1)+kron(work.',speye(n))*(K*(proj.'*model.g) )  ;...
+                              kron(ones(n,1).',speye(n))*(proj.'*model.g) ];
+  
    
    % Running the solver
-    free_variables = [];
-    IterStruct         = struct();
-    rho                  = 1e-9;
-    delta                = rho;
     time                 = 0; 
     tic;
     [xfinalvec,y,z,Info] = PPM_IPM(-2*model.g,model.L,model.b,model.H,free_variables,tol,200,...
@@ -96,8 +106,13 @@ for k = 1:length(d)
      [ival,jval,~] = find(P);
      xfinalvec    = xfinalvec -model.g;
      xfinal = sparse(ival,jval,xfinalvec,n,n);
-     % Compute the optimizate Katz centrality
-     mufinal = (I - alpha*(Problem.A+xfinal))\e;
+     % Compute the optimizate PR centrality
+     rhat         = min(diag( spdiags(1./deg,0,n,n)*(Problem.A+xfinal) ));
+     rhat         = 1- alpha*rhat;
+     r              = rhat;
+     alphahat = 1- (1-alpha)/r;
+     Phat        = 1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(Problem.A+xfinal))+(r-1).*speye(n) );
+     mufinal   =  (I - alphahat*Phat.')\((1-alphahat).*v) ;
      % Compute Correlations
       [K_1,~]    = corr(mufinal,muhat_1,'type','Kendall');
       [rbo_1,~] = rbosimilarity(mufinal,muhat_1,0.5);
@@ -105,27 +120,31 @@ for k = 1:length(d)
      if (opt == 1)
        % Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs & nnz fact & Kendal & RBO 
        problems_converged = problems_converged + 1;
-       fprintf(fileID1,' %d ]  & %d           & %d       & %.1e    & %.3e      & %d        & %d          & %d     & %.2f &     %.2f \\\\    \n',...
+       fprintf(fileID1,' %d ]  & %d           & %d       & %.1e    & %.3e      & %d        & %d          & %d     & %.2f &     %.2f  & %.2f \\\\    \n',...
                            k,        reduced_size,  IPMiter,    time,       norm(xfinal,"fro"),    full(sum(xfinal(:) > 1e-10)),...
-                           full(sum(xfinal(:) < -1e-10)),        Info.nnz, K_1, rbo_1 ); 
+                           full(sum(xfinal(:) < -1e-10)),        Info.nnz, K_1, rbo_1, rhat ); 
     else
-      fprintf(fileID1,' %d ]  & %d           & %d       & %.1e    & %.3e      & %d        & %d          & %d   &  %.2f    &  %.2f  -- Non Opt \\\\  \n',...
+      fprintf(fileID1,' %d ]  & %d           & %d       & %.1e    & %.3e      & %d        & %d          & %d   &  %.2f    &  %.2f & %.2 -- Non Opt \\\\  \n',...
                            k,        reduced_size,  IPMiter,    time,       norm(xfinal,"fro"),    full(sum(xfinal(:) > 1e-10)),...
-                           full(sum(xfinal(:) < -1e-10)),        Info.nnz, K_1, rbo_1 ); 
+                           full(sum(xfinal(:) < -1e-10)),        Info.nnz, K_1, rbo_1, rhat ); 
     end
    
     %%   ----> muhat_2 <----  Solution -- Without -- Sparsity Constraints --
    
-   model.H         = 2*speye(reduced_size);
-   model.g          = (proj*reshape(Problem.A,n*n,1));
-   model.L          = kron(muhat_2.',speye(n))*proj.';
-   model.b          = (1/alpha).*(muhat_2-1)-Problem.A*muhat_2+model.L*model.g;
+    model.H      = 2*speye(reduced_size);
+    work           = spdiags(1./deg,0,n,n)*muhat_2; 
+    model.L      = [kron(work.',speye(n))*(K*proj.');...
+                           kron(ones(n,1).',speye(n))*proj.'];
+     model.g     = reshape(Problem.A,n*n,1);
+     model.g(free_variables) = 0;
+     model.g     = proj*model.g;
+
+    model.b      = [   (1/alpha).*(muhat_2 -(1-alpha).*v) - ...
+                               Problem.A.'*(spdiags(1./deg,0,n,n)*muhat_2)+kron(work.',speye(n))*(K*(proj.'*model.g) )  ;...
+                              kron(ones(n,1).',speye(n))*(proj.'*model.g) ];
+  
    
    % Running the solver
-    free_variables = [];
-    IterStruct         = struct();
-    rho                  = 1e-9;
-    delta                = rho;
     time                 = 0; 
     tic;
     [xfinalvec,y,z,Info] = PPM_IPM(-2*model.g,model.L,model.b,model.H,free_variables,tol,200,...
@@ -141,8 +160,13 @@ for k = 1:length(d)
      [ival,jval,~] = find(P);
      xfinalvec    = xfinalvec -model.g;
      xfinal = sparse(ival,jval,xfinalvec,n,n);
-     % Compute the optimizate Katz centrality
-     mufinal = (I - alpha*(Problem.A+xfinal))\e;
+     % Compute the optimizate PR centrality
+     rhat         = min(diag( spdiags(1./deg,0,n,n)*(Problem.A+xfinal) ));
+     rhat         = 1- alpha*rhat;
+     r              = rhat;
+     alphahat = 1- (1-alpha)/r;
+     Phat        = 1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(Problem.A+xfinal))+(r-1).*speye(n) );
+     mufinal   =  (I - alphahat*Phat.')\((1-alphahat).*v) ;
      % Compute Correlations
       [K_1,~]    = corr(mufinal,muhat_2,'type','Kendall');
       [rbo_1,~] = rbosimilarity(mufinal,muhat_2,0.5);
@@ -150,13 +174,13 @@ for k = 1:length(d)
      if (opt == 1)
        % Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs & nnz fact & Kendal & RBO 
        problems_converged = problems_converged + 1;
-       fprintf(fileID3,' %d ]  & %d           & %d       & %.1e    & %.3e      & %d        & %d          & %d   &  %.2f  &    %.2f \\\\    \n',...
+       fprintf(fileID3,' %d ]  & %d           & %d       & %.1e    & %.3e      & %d        & %d          & %d   &  %.2f  &    %.2f  & %.2f\\\\    \n',...
                            k,        reduced_size,  IPMiter,    time,       norm(xfinal,"fro"),    full(sum(xfinal(:) > 1e-10)),...
-                           full(sum(xfinal(:) < -1e-10)),        Info.nnz, K_1, rbo_1 ); 
+                           full(sum(xfinal(:) < -1e-10)),        Info.nnz, K_1, rbo_1, rhat ); 
     else
-      fprintf(fileID3,' %d ]  & %d           & %d       & %.1e    & %.3e      & %d        & %d          & %d   &  %.2f   &   %.2f  -- Non Opt \\\\  \n',...
+      fprintf(fileID3,' %d ]  & %d           & %d       & %.1e    & %.3e      & %d        & %d          & %d   &  %.2f   &   %.2f  & %.2f -- Non Opt \\\\  \n',...
                            k,        reduced_size,  IPMiter,    time,       norm(xfinal,"fro"),    full(sum(xfinal(:) > 1e-10)),...
-                           full(sum(xfinal(:) < -1e-10)),        Info.nnz, K_1, rbo_1 ); 
+                           full(sum(xfinal(:) < -1e-10)),        Info.nnz, K_1, rbo_1, rhat ); 
     end
 
 
@@ -164,19 +188,22 @@ for k = 1:length(d)
 
 
     %% ----> muhat_1 <----  Solution -- With -- Sparsity Constraints
-     tau                        = 100;
-     Q                          = 2*speye(reduced_size);
-     c                           = (proj*reshape(Problem.A,n*n,1));
-     L                           = kron(muhat_1.',speye(n))*proj.';
-     b                           = (1/alpha).*(muhat_1-1)-Problem.A*muhat_1 +L*c;
-     model.H                = blkdiag(Q,sparse(reduced_size,reduced_size),sparse(reduced_size,reduced_size));
-     model.g                 = [-2.*c; tau.*ones(reduced_size,1); tau.*ones(reduced_size,1)];
-     model.L                 = [L,                                    sparse(n,reduced_size), sparse(n,reduced_size);...
-                                          - speye(reduced_size), speye(reduced_size),      -speye(reduced_size)]; 
-     model.b                 = [(1/alpha).*(muhat_1-1)-Problem.A*muhat_1+L*c; -c];
+     tau     = 100;
+     Q       = 2*speye(reduced_size);
+     work  = spdiags(1./deg,0,n,n)*muhat_1; 
+     L       = [kron(work.',speye(n))*(K*proj.');...
+                 kron(ones(n,1).',speye(n))*proj.'];
+     c       = reshape(Problem.A,n*n,1);
+     c(free_variables) = 0;
+     c        = proj*c; 
+     b       = [   (1/alpha).*(muhat_1 -(1-alpha).*v) - Problem.A.'*(spdiags(1./deg,0,n,n)*muhat_1)+kron(work.',speye(n))*(K*(proj.'*c) )  ;...
+                 kron(ones(n,1).',speye(n))*(proj.'*c) ];
+    model.b        = [b;-c];
+    model.H       = blkdiag(Q,sparse(reduced_size,reduced_size),sparse(reduced_size,reduced_size));
+    model.g        = [-2.*c; tau.*ones(reduced_size,1); tau.*ones(reduced_size,1)];
+    model.L        = [L, sparse(2*n,reduced_size), sparse(2*n,reduced_size);...
+                            - speye(reduced_size), speye(reduced_size),      -speye(reduced_size)];
    % Running the solver
-    free_variables = [];
-    IterStruct=struct();
     time = 0; 
     tic;
     [xfinalvec_L1_long,y_L1,z_L1,Info_L1] = PPM_IPM(model.g,model.L,model.b,model.H,free_variables,tol,200,...
@@ -191,8 +218,13 @@ for k = 1:length(d)
     % Recover Matrix
     xfinalvec_L1    = xfinalvec_L1_long(1:reduced_size) -c;
     xfinal_L1          = sparse(ival,jval,xfinalvec_L1,n,n);
-    % Compute the optimizate Katz centrality
-    mufinal_L1      = (I - alpha*(Problem.A+xfinal_L1))\e;
+    % Compute the optimizate PR centrality
+    rhat               = min(diag( spdiags(1./deg,0,n,n)*(Problem.A+xfinal_L1) ));
+    rhat              = 1- alpha*rhat;
+    r                   = rhat;
+    alphahat      = 1- (1-alpha)/r;
+    Phat            = 1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(Problem.A+xfinal_L1))+(r-1).*speye(n) );
+    mufinal_L1  =  (I - alphahat*Phat.')\((1-alphahat).*v) ;
      % Compute Correlations
       [K_1_L1,~]    = corr(mufinal_L1,muhat_1,'type','Kendall');
       [rbo_1_L1,~] = rbosimilarity(mufinal_L1,muhat_1,0.5);
@@ -200,29 +232,32 @@ for k = 1:length(d)
      if (opt == 1)
        % Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs & nnz fact & Kendal & RBO 
        problems_converged = problems_converged + 1;
-       fprintf(fileID2,' %d ]  & %d           & %d       & %.1e    & %.3e      & %d        & %d          & %d  &   %.2f  &    %.2f \\\\   \n',...
+       fprintf(fileID2,' %d ]  & %d           & %d       & %.1e    & %.3e      & %d        & %d          & %d  &   %.2f  &    %.2f &    %.2f \\\\   \n',...
                            k,        reduced_size,  IPMiter,    time,       norm(xfinal_L1,"fro"),    full(sum(xfinal_L1(:) > 1e-10)),...
-                           full(sum(xfinal_L1(:) < -1e-10)),        Info_L1.nnz, K_1_L1, rbo_1_L1 ); 
+                           full(sum(xfinal_L1(:) < -1e-10)),        Info_L1.nnz, K_1_L1, rbo_1_L1, rhat ); 
     else
-      fprintf(fileID2,' %d ]  & %d           & %d       & %.1e    & %.3e      & %d        & %d          & %d   &  %.2f  &    %.2f  -- Non Opt \\\\ \n',...
+      fprintf(fileID2,' %d ]  & %d           & %d       & %.1e    & %.3e      & %d        & %d          & %d   &  %.2f  &    %.2f  &    %.2f -- Non Opt \\\\ \n',...
                            k,        reduced_size,  IPMiter,    time,       norm(xfinal_L1,"fro"),    full(sum(xfinal_L1(:) > 1e-10)),...
-                           full(sum(xfinal_L1(:) < -1e-10)),        Info_L1.nnz, K_1, rbo_1 ); 
+                           full(sum(xfinal_L1(:) < -1e-10)),        Info_L1.nnz, K_1_1, rbo_1_L1, rhat ); 
     end
     
    %% ----> muhat_2 <----  Solution -- With -- Sparsity Constraints
-     tau                        = 100;
-     Q                          = 2*speye(reduced_size);
-     c                           = (proj*reshape(Problem.A,n*n,1));
-     L                           = kron(muhat_2.',speye(n))*proj.';
-     b                           = (1/alpha).*(muhat_2-1)-Problem.A*muhat_2 +L*c;
-     model.H                = blkdiag(Q,sparse(reduced_size,reduced_size),sparse(reduced_size,reduced_size));
-     model.g                 = [-2.*c; tau.*ones(reduced_size,1); tau.*ones(reduced_size,1)];
-     model.L                 = [L,                                    sparse(n,reduced_size), sparse(n,reduced_size);...
-                                          - speye(reduced_size), speye(reduced_size),      -speye(reduced_size)]; 
-     model.b                 = [(1/alpha).*(muhat_2-1)-Problem.A*muhat_2+L*c; -c];
+    tau     = 100;
+     Q       = 2*speye(reduced_size);
+     work  = spdiags(1./deg,0,n,n)*muhat_2; 
+     L       = [kron(work.',speye(n))*(K*proj.');...
+                 kron(ones(n,1).',speye(n))*proj.'];
+     c       = reshape(Problem.A,n*n,1);
+     c(free_variables) = 0;
+     c        = proj*c; 
+     b       = [   (1/alpha).*(muhat_2 -(1-alpha).*v) - Problem.A.'*(spdiags(1./deg,0,n,n)*muhat_2)+kron(work.',speye(n))*(K*(proj.'*c) )  ;...
+                 kron(ones(n,1).',speye(n))*(proj.'*c) ];
+    model.b        = [b;-c];
+    model.H       = blkdiag(Q,sparse(reduced_size,reduced_size),sparse(reduced_size,reduced_size));
+    model.g        = [-2.*c; tau.*ones(reduced_size,1); tau.*ones(reduced_size,1)];
+    model.L        = [L, sparse(2*n,reduced_size), sparse(2*n,reduced_size);...
+                            - speye(reduced_size), speye(reduced_size),      -speye(reduced_size)];
    % Running the solver
-    free_variables = [];
-    IterStruct=struct();
     time = 0; 
     tic;
     [xfinalvec_L1_long,y_L1,z_L1,Info_L1] = PPM_IPM(model.g,model.L,model.b,model.H,free_variables,tol,200,...
@@ -237,8 +272,13 @@ for k = 1:length(d)
     % Recover Matrix
     xfinalvec_L1    = xfinalvec_L1_long(1:reduced_size) -c;
     xfinal_L1          = sparse(ival,jval,xfinalvec_L1,n,n);
-    % Compute the optimizate Katz centrality
-    mufinal_L1      = (I - alpha*(Problem.A+xfinal_L1))\e;
+    % Compute the optimizate PR centrality
+    rhat               = min(diag( spdiags(1./deg,0,n,n)*(Problem.A+xfinal_L1) ));
+    rhat              = 1- alpha*rhat;
+    r                   = rhat;
+    alphahat      = 1- (1-alpha)/r;
+    Phat            = 1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(Problem.A+xfinal_L1))+(r-1).*speye(n) );
+    mufinal_L1  =  (I - alphahat*Phat.')\((1-alphahat).*v) ;
      % Compute Correlations
       [K_1_L1,~]    = corr(mufinal_L1,muhat_2,'type','Kendall');
       [rbo_1_L1,~] = rbosimilarity(mufinal_L1,muhat_2,0.5);
@@ -246,13 +286,13 @@ for k = 1:length(d)
      if (opt == 1)
        % Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs & nnz fact & Kendal & RBO 
        problems_converged = problems_converged + 1;
-       fprintf(fileID4,' %d ]  & %d           & %d       & %.1e    & %.3e      & %d        & %d          & %d    &  %.2f    &  %.2f \\\\    \n',...
+       fprintf(fileID4,' %d ]  & %d           & %d       & %.1e    & %.3e      & %d        & %d          & %d    &  %.2f    &  %.2f  & %.2f  \\\\    \n',...
                            k,        reduced_size,  IPMiter,    time,       norm(xfinal_L1,"fro"),    full(sum(xfinal_L1(:) > 1e-10)),...
-                           full(sum(xfinal_L1(:) < -1e-10)),        Info_L1.nnz, K_1_L1, rbo_1_L1 ); 
+                           full(sum(xfinal_L1(:) < -1e-10)),        Info_L1.nnz, K_1_L1, rbo_1_L1, rhat ); 
     else
-      fprintf(fileID4,' %d ]  & %d           & %d       & %.1e    & %.3e      & %d        & %d          & %d   &  %.2f     & %.2f  -- Non Opt \\\\ \n',...
+      fprintf(fileID4,' %d ]  & %d           & %d       & %.1e    & %.3e      & %d        & %d          & %d   &  %.2f     & %.2f & %.2f   -- Non Opt \\\\ \n',...
                            k,        reduced_size,  IPMiter,    time,       norm(xfinal_L1,"fro"),    full(sum(xfinal_L1(:) > 1e-10)),...
-                           full(sum(xfinal_L1(:) < -1e-10)),        Info_L1.nnz, K_1, rbo_1 ); 
+                           full(sum(xfinal_L1(:) < -1e-10)),        Info_L1.nnz, K_1_L1, rbo_1_L1, rhat ); 
     end
 
     % Print Final Statistics
