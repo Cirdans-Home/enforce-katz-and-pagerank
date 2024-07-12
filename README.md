@@ -1,6 +1,6 @@
 # Enforce Katz and PageRank
 
-Code for enforcing the Katz and PagRank centrality scores.
+Code for enforcing the Katz and PageRank centrality scores.
 
 ## Collaborators
 
@@ -19,11 +19,13 @@ This command will not only clone the main repository but also initialize and clo
 
 ### Target Stationary Distribution Problem
 
-We make comparison with the results from
+We make a comparison with the results from
+
 > "Assigning Stationary Distributions to Sparse Stochastic Matrices", Nicolas Gillis and Paul Van Dooren, arXiv:2312.16011, 2023. [https://arxiv.org/abs/2312.16011](arxiv:2312.16011)
+
 Their [code](https://gitlab.com/ngillis/TSDP) is included as a submodule of this repository, hence if you want to run the related comparison tests you need the clone command with the `--recurse-submodules` option.
 
 ### GUROBI (Optional)
 
-Some version of the solvers can use the [Gurobi](https://www.gurobi.com) solver for the optimization problem. It is possible to get an Academic License for it. If you don't want to use, this is not required since there are implementations written in pure Matlab and doesn't require external tools.
+Some versions of the solvers can use the [Gurobi](https://www.gurobi.com) solver for the optimization problem. It is possible to get an Academic License for it. If you don't want to use it, this is not required since implementations are written in pure Matlab and don't require external tools.
 
