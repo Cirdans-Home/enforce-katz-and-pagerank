@@ -34,6 +34,10 @@ index = kk+(kk-1)*n;
 
 [free_variables,~] = find(proj(:,index));
 
+scaling                          = 1;
+scaling_option              = 1; % Do not Change Scaling Options
+scaling_direction          = 'l'; % Do not Change Scaling Options
+
 if beta == 1
     % Solving only with Frobenius norm constraints
     % Building the GUROBI model
@@ -71,56 +75,59 @@ if beta == 1
         rhat         = min(diag( spdiags(1./deg,0,n,n)*(A+Delta) ));
         rhat         = 1- alpha*rhat;
         r              = rhat;
-        if nargout == 4
+        if nargout >= 4
             varargout{3} = rhat;
         end
         alphahat = 1- (1-alpha)/r;
         Phat        =  1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(A+Delta))+(r-1).*speye(n) );
-        varargout{2} = (I - alphahat*Phat.')\((1-alphahat).*v) ;
+        varargout{2} = (I - alphahat*Phat.')\((1-alphahat).*v);
+        if nargout == 5
+            varargout{4} = Phat;
+        end
     end
 
 else
-    warning('Not yet implemented! Defaulting to ')
     % Solving with sparsity constraints
+    % Building the GUROBI model
+    model.name = 'PageRank-l1-fro';
     tau = (1-beta)/beta;
     Q   = 2*speye(reduced_size);
     work = spdiags(1./deg,0,n,n)*pihat;
     L       = [kron(work.',speye(n))*(K*proj.');...
         kron(ones(n,1).',speye(n))*proj.'];
-
-
     c       = reshape(A,n*n,1);
     c(free_variables) = 0;
     c        = proj*c;
-
     b       = [   (1/alpha).*(pihat -(1-alpha).*v) - A.'*(spdiags(1./deg,0,n,n)*pihat)+kron(work.',speye(n))*(K*(proj.'*c) )  ;...
         kron(ones(n,1).',speye(n))*(proj.'*c) ];
     b        = [b;-c];
-    H       = blkdiag(Q,sparse(reduced_size,reduced_size),sparse(reduced_size,reduced_size));
+    model.Q  = blkdiag(Q,sparse(reduced_size,reduced_size),sparse(reduced_size,reduced_size));
     g        = [-2.*c; tau.*ones(reduced_size,1); tau.*ones(reduced_size,1)];
-    L        = [L, sparse(2*n,reduced_size), sparse(2*n,reduced_size);...
+    model.obj = full(g);
+    L   = [L, sparse(2*n,reduced_size), sparse(2*n,reduced_size);...
         - speye(reduced_size), speye(reduced_size),      -speye(reduced_size)];
-    % Running the solver
-    IterStruct=struct();
-    rho            = 1e-14;
-    delta          = rho;
-    pc_mode        = 2;
-    tic;
-    [Delta,~,~,Info] = PPM_IPM(g,L,b,H,free_variables,tol,200,...
-        pc_mode,print_mode,IterStruct,rho,delta);
-    elapstime = toc;
-    if nargout >= 2
-        varargout{1}.time          = elapstime;
-        varargout{1}.opt            = Info.opt;
-        varargout{1}.iter            = Info.ExIt;
-        varargout{1}.IPMiter     = Info.IPM_It;
-        varargout{1}.primalres  = [Info.NatRes.primal];
-        varargout{1}.dualres     = [Info.NatRes.dual];
-        varargout{1}.compl       = [Info.NatRes.compl];
+    if (scaling == 1)
+        DD = Scale_the_problem(L,scaling_option,scaling_direction);
+        L = spdiags(DD,0,size(L,1),size(L,1))*L;  % Apply the left scaling.
+        b = b.*DD;
     end
+    model.A     = L;
+    model.rhs   = full(b);
+    model.lb  = zeros(size(model.A,2),1);
+    model.lb(free_variables) = -Inf;
+    model.sense = repmat('=',size(model.A,1),1); 
+
+    % Call GUROBI on the problem to solve
+    result = gurobi(model);
+    if nargout >= 2
+        varargout{1}.time       = result.runtime;
+        varargout{1}.iter       = result.itercount;
+        varargout{1}.baritercount = result.baritercount;
+    end
+    
     % Recover Matrix and Desired Ranking
     [ival,jval,~] = find(P);
-    Delta    = Delta(1:reduced_size) -c;
+    Delta    = result.x(1:reduced_size) -c;
     Delta    = sparse(ival,jval,Delta,n,n);
     % Compute the optimized PageRank centrality
     if nargout >= 3
@@ -801,4 +808,119 @@ end
 % ******************************************************************************************************************** %
 % END OF FILE.
 % ******************************************************************************************************************** %
+end
+
+function [D,D_L] = Scale_the_problem(A,scale_option,direction)
+% ==================================================================================================================== %
+% [D] = Scale_the_problem(A): 
+% -------------------------------------------------------------------------------------------------------------------- %
+% This function, takes as an input a sparse matrix A, representing the constraints of a quadratic progrmaming problem.
+% It checks whether the matrix is well scaled, and if not, it applies some linear transformations to the matrix, in 
+% order to improve its numerical properties. The method return a diagonal matrix D, which the user should 
+% use in order to recover the solution of the initial problem (after solving the scaled one).
+% The optional parameter: scale_option. This parameter can take 3 values:
+%   (i)   scale_option = 0, no scaling will be applied.
+%   (ii)  scale_option = 1, iterative geometric scaling will be used.
+%   (iii) scale_option = 2, equilibrium scaling is employed.
+%   (iv)  scale_option = 3, nearest power of 2 scaling is used.
+%   (v)   scale_option = 4, mixed strategy, based on the properties of the respective row/column.
+% The optional parameter: direction. This parameter can take 3 values:
+%   (i)   direction = 'r', right scaling (default).
+%   (ii)  direction = 'l', left scaling.
+% For more information about these scaling choices, the reader is refered to:
+%                                   https://en.wikibooks.org/wiki/GLPK/Scaling
+%
+% Author: Spyridon Pougkakiotis.
+% ==================================================================================================================== %
+    if (nargin < 2 || isempty(scale_option))
+        scale_option = 1; % Set geometric scaling as the default option.
+    end
+    if (nargin < 3 || isempty(direction))
+        direction = 'r';
+    end
+    if (direction == 'l')
+        A = A';
+    end     
+    pos_A = abs(A);       % Need it to identify non-zero elements.
+    D = zeros(size(A,2),1);
+    D_L = [];
+    pos_ind = pos_A > 0;   
+    % ================================================================================================================ %
+    % Based on the input parameters, build the desired scaling factor.
+    % ---------------------------------------------------------------------------------------------------------------- %
+    if (max(max(pos_A)) <= 10 && min(min(abs(A(pos_ind))))>= 0.1 || scale_option == 0)
+        fprintf('No scaling necessary.\n'); % Well scaled or no scale.
+        D = ones(size(A,2),1);
+    elseif (scale_option == 1) % Geometric scaling (applied on columns for computational efficiency).
+        fprintf('The constraint matrix is scaled. Geometric scaling is employed.\n');
+        for j = 1:size(A,2)
+            rows = pos_A(:,j) > 0; % Find all non-zero elements for this column
+            if (any(rows))
+                %size(pos_A(rows,j))
+                maximum = max(pos_A(rows,j));
+                minimum = min(pos_A(rows,j));
+                if (maximum*minimum > 10^(-12) && maximum*minimum < 10^(12))
+                    D(j) = 1/sqrt(maximum*minimum);
+                else
+                    D(j) = 1;
+                end
+            else           
+                D(j) = 1; % Extreme case, where one column is all zeros.
+            end
+        end
+    elseif (scale_option == 2) % Equilibrium scaling (applied on columns for efficiency).
+        fprintf('The constraint matrix is scaled. Equilibrium scaling is employed.\n');
+        for j = 1:size(A,2)
+            rows = pos_A(:,j) > 0; % Find all non-zero elements for this column.
+            maximum = max(pos_A(rows,j));
+            if (maximum > 10^(-6))
+                D(j) = 1/maximum;
+            else
+                D(j) = 1;
+            end
+        end
+    elseif (scale_option == 3) % Nearest power of 2 scaling + geometric scaling (avoiding rounding errors).
+        fprintf('The constraint matrix is scaled. Geometric scaling with nearest power of 2 is employed.\n');
+        for j = 1:size(A,2)
+            rows = pos_A(:,j) > 0; % Find all non-zero elements for this column.
+            if (any(rows))
+                maximum = max(pos_A(rows,j));
+                minimum = min(pos_A(rows,j));
+                p = nextpow2(sqrt(maximum*minimum));
+                if (maximum*minimum > 10^(-12) && maximum*minimum < 10^(12))
+                    D(j) = 1/(2^(p-1));
+                else
+                    D(j) = 1;
+                end
+            else
+                D(j) = 1; % Extreme case, where one column is all zeros.
+            end
+        end
+    elseif (scale_option == 4)
+        fprintf('The constraint matrix is scaled. Mixed scaling is employed.\n');
+        for j = 1:size(A,2)
+            rows = pos_A(:,j) > 0; % Find all non-zero elements for this column
+            if (any(rows))
+                %size(pos_A(rows,j))
+                maximum = max(pos_A(rows,j));
+                minimum = min(pos_A(rows,j));
+                if (maximum > 10^3 && minimum < 10^(-3))
+                    p = nextpow2(sqrt(maximum*minimum));
+                    D(j) = 1/(2^(p-1));
+                elseif (1/minimum > maximum && minimum > 10^(-6))
+                    p = nextpow2(minimum);
+                    D(j) = 1/(2^(p-1));
+                elseif (maximum < 10^(6))
+                    p = nextpow2(maximum);
+                    D(j) = 1/(2^(p-1));
+                else
+                    D(j) = 1;
+                end
+            else           
+                D(j) = 1; % Extreme case, where one column is all zeros.
+            end
+        end
+    end
+    
+    % ================================================================================================================ %
 end
