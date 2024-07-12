@@ -45,3 +45,123 @@
       EX5.mat      &  combinatorial problem     &   6545   & 302225   & 1 \\   
        Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
       EX5.mat      &  combinatorial problem     &   6545   & 302225   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+ The total PPM iterates were: 66, 
+ The total IPPM iterates were: 69, 
+ The total time was: 3.925454e+00 and 4 problems converged.
+ The Stopping tol was: 1.00e-08 
+        Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+ The total PPM iterates were: 46, 
+ The total IPPM iterates were: 46, 
+ The total time was: 2.451663e+00 and 4 problems converged.
+ The Stopping tol was: 1.00e-08 
+        Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+ The total PPM iterates were: 55, 
+ The total IPPM iterates were: 68, 
+ The total time was: 3.947626e+00 and 4 problems converged.
+ The Stopping tol was: 1.00e-08 
+        Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+ The total PPM iterates were: 43, 
+ The total IPPM iterates were: 43, 
+ The total time was: 2.303931e+00 and 4 problems converged.
+ The Stopping tol was: 1.00e-08 
+        Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+ The total PPM iterates were: 44, 
+ The total IPPM iterates were: 44, 
+ The total time was: 2.348614e+00 and 4 problems converged.
+ The Stopping tol was: 1.00e-08 
+        Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+ The total PPM iterates were: 45, 
+ The total IPPM iterates were: 45, 
+ The total time was: 2.389979e+00 and 4 problems converged.
+ The Stopping tol was: 1.00e-08 
+        Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+ The total PPM iterates were: 44, 
+ The total IPPM iterates were: 44, 
+ The total time was: 2.329472e+00 and 4 problems converged.
+ The Stopping tol was: 1.00e-08 
+        Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+ The total PPM iterates were: 45, 
+ The total IPPM iterates were: 45, 
+ The total time was: 2.384813e+00 and 4 problems converged.
+ The Stopping tol was: 1.00e-08 
+        Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+ The total PPM iterates were: 59, 
+ The total IPPM iterates were: 74, 
+ The total time was: 4.228614e+00 and 4 problems converged.
+ The Stopping tol was: 1.00e-08 
+        Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+ The total PPM iterates were: 59, 
+ The total IPPM iterates were: 74, 
+ The total time was: 4.209809e+00 and 4 problems converged.
+ The Stopping tol was: 1.00e-08 
+        Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+ The total PPM iterates were: 45, 
+ The total IPPM iterates were: 45, 
+ The total time was: 2.376795e+00 and 4 problems converged.
+ The Stopping tol was: 1.00e-08 
+        Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+ The total PPM iterates were: 45, 
+ The total IPPM iterates were: 45, 
+ The total time was: 2.385418e+00 and 4 problems converged.
+ The Stopping tol was: 1.00e-08 
+ 

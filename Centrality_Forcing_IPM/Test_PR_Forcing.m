@@ -33,17 +33,18 @@ rng(seed)
 total_iters                     = 0;
 total_time                     = 0;
 total_IPM_iters             = 0;
-scaling_option              = 3;
-scaling_direction          = 'r';
+scaling                          = 1;
+scaling_option              = 1; % Do not Change Scaling Options
+scaling_direction          = 'l'; % Do not Change Scaling Options
 tol                                 = 1e-8;
 pc_mode                      = 2;
 print_mode                   = 3;
 problems_converged   = 0;
 plot_fig                         = 0; 
 IterStruct                      = struct();
-rho                               = 1e-15;
+rho                               = 1e-9;
 delta                             = rho;
-for k = 1:length(d)
+for k = 7%1:length(d)
    model       = struct();
    load(fullfile(QP_problems_path,d(k).name));
    model.name = d(k).name
@@ -51,7 +52,7 @@ for k = 1:length(d)
    %% Computation of the "original" PR centrality
    I        = speye(n,n);
    e       = ones(n,1);
-   alpha = 0.9;
+   alpha = 0.8;
    v        = (1/n).*e;  % Teleportation
    deg    = Problem.A*e;
    mu      = (I - alpha*(spdiags(1./deg,0,n,n)*Problem.A).')\((1-alpha).*v) ;
@@ -90,11 +91,21 @@ for k = 1:length(d)
                               kron(ones(n,1).',speye(n))*(proj.'*model.g) ];
   
    
+    if (scaling == 1)
+        DD = Scale_the_problem(model.L,scaling_option,scaling_direction);
+        model.L = spdiags(DD,0,size(model.L,1),size(model.L,1))*model.L;  % Apply the left scaling.
+        model.b = model.b.*DD;
+    end
+
+
+  
    % Running the solver
     time                 = 0; 
     tic;
     [xfinalvec,y,z,Info] = PPM_IPM(-2*model.g,model.L,model.b,model.H,free_variables,tol,200,...
                                          pc_mode,print_mode,IterStruct,rho,delta); 
+   
+
     time                 = time                 + toc;
     total_time        = total_time         + time;
     opt                   = Info.opt;
@@ -143,12 +154,21 @@ for k = 1:length(d)
                                Problem.A.'*(spdiags(1./deg,0,n,n)*muhat_2)+kron(work.',speye(n))*(K*(proj.'*model.g) )  ;...
                               kron(ones(n,1).',speye(n))*(proj.'*model.g) ];
   
-   
+     if (scaling == 1)
+        DD = Scale_the_problem(model.L,scaling_option,scaling_direction);
+        model.L = spdiags(DD,0,size(model.L,1),size(model.L,1))*model.L;  % Apply the left scaling.
+        model.b = model.b.*DD;
+    end
+
+
    % Running the solver
     time                 = 0; 
     tic;
     [xfinalvec,y,z,Info] = PPM_IPM(-2*model.g,model.L,model.b,model.H,free_variables,tol,200,...
                                          pc_mode,print_mode,IterStruct,rho,delta); 
+
+
+
     time                 = time                 + toc;
     total_time        = total_time         + time;
     opt                   = Info.opt;
@@ -188,7 +208,8 @@ for k = 1:length(d)
 
 
     %% ----> muhat_1 <----  Solution -- With -- Sparsity Constraints
-     tau     = 100;
+    constr_var = setdiff(1:1:reduced_size, free_variables);  
+    tau     = 10;
      Q       = 2*speye(reduced_size);
      work  = spdiags(1./deg,0,n,n)*muhat_1; 
      L       = [kron(work.',speye(n))*(K*proj.');...
@@ -198,16 +219,26 @@ for k = 1:length(d)
      c        = proj*c; 
      b       = [   (1/alpha).*(muhat_1 -(1-alpha).*v) - Problem.A.'*(spdiags(1./deg,0,n,n)*muhat_1)+kron(work.',speye(n))*(K*(proj.'*c) )  ;...
                  kron(ones(n,1).',speye(n))*(proj.'*c) ];
-    model.b        = [b;-c];
-    model.H       = blkdiag(Q,sparse(reduced_size,reduced_size),sparse(reduced_size,reduced_size));
-    model.g        = [-2.*c; tau.*ones(reduced_size,1); tau.*ones(reduced_size,1)];
-    model.L        = [L, sparse(2*n,reduced_size), sparse(2*n,reduced_size);...
-                            - speye(reduced_size), speye(reduced_size),      -speye(reduced_size)];
+    model.b    = [b;-c(constr_var)];
+    model.H   = blkdiag(Q,sparse(length(constr_var),length(constr_var)),sparse(length(constr_var),length(constr_var)));
+    model.g    = [-2.*c; tau.*ones(length(constr_var),1); tau.*ones(length(constr_var),1)];
+    II               = speye(reduced_size);
+    model.L    = [L, sparse(2*n,length(constr_var)), sparse(2*n,length(constr_var));...
+                        - II(constr_var,:),     speye(length(constr_var)),      -speye(length(constr_var))];
+   
+     if (scaling == 1)
+        DD = Scale_the_problem(model.L,scaling_option,scaling_direction);
+        model.L = spdiags(DD,0,size(model.L,1),size(model.L,1))*model.L;  % Apply the left scaling.
+        model.b = model.b.*DD;
+    end
+
+
    % Running the solver
-    time = 0; 
+    time                 = 0; 
     tic;
     [xfinalvec_L1_long,y_L1,z_L1,Info_L1] = PPM_IPM(model.g,model.L,model.b,model.H,free_variables,tol,200,...
                                          pc_mode,print_mode,IterStruct,rho,delta); 
+
     time = time + toc;
     total_time = total_time + time;
     opt     = Info_L1.opt;
@@ -242,7 +273,7 @@ for k = 1:length(d)
     end
     
    %% ----> muhat_2 <----  Solution -- With -- Sparsity Constraints
-    tau     = 100;
+    tau     = 10;
      Q       = 2*speye(reduced_size);
      work  = spdiags(1./deg,0,n,n)*muhat_2; 
      L       = [kron(work.',speye(n))*(K*proj.');...
@@ -252,16 +283,30 @@ for k = 1:length(d)
      c        = proj*c; 
      b       = [   (1/alpha).*(muhat_2 -(1-alpha).*v) - Problem.A.'*(spdiags(1./deg,0,n,n)*muhat_2)+kron(work.',speye(n))*(K*(proj.'*c) )  ;...
                  kron(ones(n,1).',speye(n))*(proj.'*c) ];
-    model.b        = [b;-c];
-    model.H       = blkdiag(Q,sparse(reduced_size,reduced_size),sparse(reduced_size,reduced_size));
-    model.g        = [-2.*c; tau.*ones(reduced_size,1); tau.*ones(reduced_size,1)];
-    model.L        = [L, sparse(2*n,reduced_size), sparse(2*n,reduced_size);...
-                            - speye(reduced_size), speye(reduced_size),      -speye(reduced_size)];
+    model.b    = [b;-c(constr_var)];
+    model.H   = blkdiag(Q,sparse(length(constr_var),length(constr_var)),sparse(length(constr_var),length(constr_var)));
+    model.g    = [-2.*c; tau.*ones(length(constr_var),1); tau.*ones(length(constr_var),1)];
+    II               = speye(reduced_size);
+    model.L    = [L, sparse(2*n,length(constr_var)), sparse(2*n,length(constr_var));...
+                        - II(constr_var,:),     speye(length(constr_var)),      -speye(length(constr_var))];
+   
+    
+    
+    if (scaling == 1)
+        DD = Scale_the_problem(model.L,scaling_option,scaling_direction);
+        model.L = spdiags(DD,0,size(model.L,1),size(model.L,1))*model.L;  % Apply the left scaling.
+        model.b = model.b.*DD;
+    end
+
+
    % Running the solver
-    time = 0; 
+    time                 = 0; 
     tic;
     [xfinalvec_L1_long,y_L1,z_L1,Info_L1] = PPM_IPM(model.g,model.L,model.b,model.H,free_variables,tol,200,...
                                          pc_mode,print_mode,IterStruct,rho,delta); 
+   
+ 
+ 
     time = time + toc;
     total_time = total_time + time;
     opt     = Info_L1.opt;
