@@ -1,0 +1,3 @@
+[submodule "TSDP"]
+	path = TSDP
+	url = https://gitlab.com/ngillis/TSDP.git
