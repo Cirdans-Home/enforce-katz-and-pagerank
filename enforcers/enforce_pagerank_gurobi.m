@@ -128,12 +128,15 @@ else
         rhat         = min(diag( spdiags(1./deg,0,n,n)*(A+Delta) ));
         rhat         = 1- alpha*rhat;
         r              = rhat;
-        if nargout == 4
+        if nargout >= 4
             varargout{3} = rhat;
         end
         alphahat = 1- (1-alpha)/r;
         Phat        =  1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(A+Delta))+(r-1).*speye(n) );
         varargout{2} = (I - alphahat*Phat.')\((1-alphahat).*v) ;
+        if nargout == 5
+            varargout{5} = Phat;
+        end
     end
 end
 
