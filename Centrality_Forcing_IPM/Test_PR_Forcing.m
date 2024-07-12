@@ -28,7 +28,7 @@ fprintf(fileID3,'Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs
 fileID4 = fopen('./Results_Figures/PR_L1_mu2.txt','a+');
 fprintf(fileID4,'Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact & Kendal & RBO & rhat \\\\    \n'); 
 
-seed = 10;
+seed                            = 10;
 rng(seed)
 total_iters                     = 0;
 total_time                     = 0;

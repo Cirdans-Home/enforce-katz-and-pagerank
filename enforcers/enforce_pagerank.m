@@ -41,13 +41,13 @@ if beta == 1
     H      = 2*speye(reduced_size);
     work = spdiags(1./deg,0,n,n)*pihat;
     L       = [kron(work.',speye(n))*(K*proj.');...
-        kron(ones(n,1).',speye(n))*proj.'];
+                 kron(ones(n,1).',speye(n))*proj.'];
     g       = reshape(A,n*n,1);
     g(free_variables) = 0;
     g        = proj*g;
 
     b       = [   (1/alpha).*(pihat -(1-alpha).*v) - A.'*(spdiags(1./deg,0,n,n)*pihat)+kron(work.',speye(n))*(K*(proj.'*g) )  ;...
-        kron(ones(n,1).',speye(n))*(proj.'*g) ];
+                     kron(ones(n,1).',speye(n))*(proj.'*g) ];
 
 
     % Running the solver
@@ -99,12 +99,13 @@ if beta == 1
     end
 
 else
+    constr_var = setdiff(1:1:reduced_size, free_variables); 
     % Solving with sparsity constraints
     tau = (1-beta)/beta;
     Q   = 2*speye(reduced_size);
     work = spdiags(1./deg,0,n,n)*pihat;
     L       = [kron(work.',speye(n))*(K*proj.');...
-        kron(ones(n,1).',speye(n))*proj.'];
+                 kron(ones(n,1).',speye(n))*proj.'];
 
 
     c       = reshape(A,n*n,1);
@@ -112,12 +113,13 @@ else
     c        = proj*c;
 
     b       = [   (1/alpha).*(pihat -(1-alpha).*v) - A.'*(spdiags(1./deg,0,n,n)*pihat)+kron(work.',speye(n))*(K*(proj.'*c) )  ;...
-        kron(ones(n,1).',speye(n))*(proj.'*c) ];
-    b        = [b;-c];
-    H       = blkdiag(Q,sparse(reduced_size,reduced_size),sparse(reduced_size,reduced_size));
-    g        = [-2.*c; tau.*ones(reduced_size,1); tau.*ones(reduced_size,1)];
-    L        = [L, sparse(2*n,reduced_size), sparse(2*n,reduced_size);...
-        - speye(reduced_size), speye(reduced_size),      -speye(reduced_size)];
+                     kron(ones(n,1).',speye(n))*(proj.'*c) ];
+    b        = [b;-c(constr_var)];
+    H       = blkdiag(Q,sparse(length(constr_var),length(constr_var)),sparse(length(constr_var),length(constr_var)));
+    g        = [-2.*c; tau.*ones(length(constr_var),1); tau.*ones(length(constr_var),1)];
+    II        = speye(reduced_size);
+    L        = [L, sparse(2*n,length(constr_var)), sparse(2*n,length(constr_var));...
+                  - II(constr_var,:),     speye(length(constr_var)),      -speye(length(constr_var))];
     % Running the solver
     IterStruct=struct();
     rho            = 1e-14;
