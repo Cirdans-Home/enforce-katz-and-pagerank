@@ -33,8 +33,9 @@ rng(seed)
 total_iters                     = 0;
 total_time                      = 0;
 total_IPM_iters                 = 0;
-scaling_option                  = 3;
-scaling_direction               = 'r';
+scaling                      = 1;
+scaling_option               = 1; % Do not Change Scaling Options
+scaling_direction            = 'l'; % Do not Change Scaling Options
 tol                             = 1e-8;
 pc_mode                         = 2;
 print_mode                      = 3;
@@ -42,7 +43,7 @@ problems_converged              = 0;
 plot_fig                        = 0;
 rho                             = 1e-10;
 delta                           = rho; 
-for k = 1:length(d)
+for k =  7 %1:length(d)
    model       = struct();
    load(fullfile(QP_problems_path,d(k).name));
    model.name = d(k).name
@@ -90,6 +91,13 @@ for k = 1:length(d)
    model.L          = kron(muhat_1.',speye(n))*proj.';
    model.b          = (1/alpha).*(muhat_1-1)-Problem.A*muhat_1+model.L*model.g;
    
+  if (scaling == 1)
+        DD = Scale_the_problem(model.L,scaling_option,scaling_direction);
+        model.L = spdiags(DD,0,size(model.L,1),size(model.L,1))*model.L;  % Apply the left scaling.
+        model.b = model.b.*DD;
+    end
+
+
    % Running the solver
     free_variables = [];
     IterStruct         = struct();
@@ -133,6 +141,14 @@ for k = 1:length(d)
    model.L          = kron(muhat_2.',speye(n))*proj.';
    model.b          = (1/alpha).*(muhat_2-1)-Problem.A*muhat_2+model.L*model.g;
    
+
+   if (scaling == 1)
+        DD = Scale_the_problem(model.L,scaling_option,scaling_direction);
+        model.L = spdiags(DD,0,size(model.L,1),size(model.L,1))*model.L;  % Apply the left scaling.
+        model.b = model.b.*DD;
+    end
+
+
    % Running the solver
     free_variables = [];
     IterStruct           = struct();
@@ -184,7 +200,16 @@ for k = 1:length(d)
      model.L                 = [L,                                    sparse(n,reduced_size), sparse(n,reduced_size);...
                                           - speye(reduced_size), speye(reduced_size),      -speye(reduced_size)]; 
      model.b                 = [(1/alpha).*(muhat_1-1)-Problem.A*muhat_1+L*c; -c];
-   % Running the solver
+   
+    
+    if (scaling == 1)
+        DD = Scale_the_problem(model.L,scaling_option,scaling_direction);
+        model.L = spdiags(DD,0,size(model.L,1),size(model.L,1))*model.L;  % Apply the left scaling.
+        model.b = model.b.*DD;
+    end
+
+     
+    % Running the solver
     free_variables = [];
     IterStruct=struct();
     time = 0; 
@@ -230,7 +255,15 @@ for k = 1:length(d)
      model.L                 = [L,                                    sparse(n,reduced_size), sparse(n,reduced_size);...
                                           - speye(reduced_size), speye(reduced_size),      -speye(reduced_size)]; 
      model.b                 = [(1/alpha).*(muhat_2-1)-Problem.A*muhat_2+L*c; -c];
-   % Running the solver
+   
+    if (scaling == 1)
+        DD = Scale_the_problem(model.L,scaling_option,scaling_direction);
+        model.L = spdiags(DD,0,size(model.L,1),size(model.L,1))*model.L;  % Apply the left scaling.
+        model.b = model.b.*DD;
+    end
+ 
+     
+    % Running the solver
     free_variables = [];
     IterStruct=struct();
     time = 0; 
