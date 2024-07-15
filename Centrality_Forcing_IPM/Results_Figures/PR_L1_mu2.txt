@@ -65,3 +65,29 @@ Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact
  7 ]  & 18498           & 17       & 9.9e-01    & 1.036e+01      & 1435        & 1436          & 241067    &  1.00    &  1.00  & 1.22  \\    
 Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact & Kendal & RBO & rhat \\    
  7 ]  & 18498           & 17       & 9.9e-01    & 1.036e+01      & 1435        & 1436          & 241067    &  1.00    &  1.00  & 1.22  \\    
+Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact & Kendal & RBO & rhat \\    
+Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact & Kendal & RBO & rhat \\    
+Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact & Kendal & RBO & rhat \\    
+Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact & Kendal & RBO & rhat \\    
+Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact & Kendal & RBO & rhat \\    
+Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact & Kendal & RBO & rhat \\    
+ 7 ]  & 18498           & 16       & 1.3e+00    & 2.815e+00      & 1360        & 1383          & 241067    &  1.00    &  1.00  & 1.12  \\    
+Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact & Kendal & RBO & rhat \\    
+ 7 ]  & 18498           & 16       & 1.2e+00    & 2.815e+00      & 1360        & 1383          & 241067    &  1.00    &  1.00  & 1.12  \\    
+Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact & Kendal & RBO & rhat \\    
+Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact & Kendal & RBO & rhat \\    
+Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact & Kendal & RBO & rhat \\    
+Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact & Kendal & RBO & rhat \\    
+ 7 ]  & 18498           & 16       & 1.3e+00    & 2.815e+00      & 1337        & 1359          & 241067    &  1.00    &  1.00  & 1.12  \\    
+Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact & Kendal & RBO & rhat \\    
+ 7 ]  & 18498           & 16       & 1.3e+00    & 2.815e+00      & 1337        & 1359          & 241067    &  1.00    &  1.00  & 1.12  \\    
+Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact & Kendal & RBO & rhat \\    
+Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact & Kendal & RBO & rhat \\    
+Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact & Kendal & RBO & rhat \\    
+Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact & Kendal & RBO & rhat \\    
+Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact & Kendal & RBO & rhat \\    
+Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact & Kendal & RBO & rhat \\    
+Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact & Kendal & RBO & rhat \\    
+Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact & Kendal & RBO & rhat \\    
+Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact & Kendal & RBO & rhat \\    
+ 7 ]  & 18498           & 16       & 5.8e-01    & 2.815e+00      & 1337        & 1359          & 145116    &  1.00    &  1.00  & 1.12  \\    

@@ -2,7 +2,7 @@
 
 function [x,y,z,OInfo] = prox_eval(c,A,A_tr,Q,b,xk,yk,zk,rho,delta,...
                                        free_variables,pos_vars,num_of_pos_vars,...
-                                       tol,maxit,pc,pl)
+                                       tol,maxit,pc,pl, Struct)
 % ==================================================================================================================== %
 % This function is an Interior Point-Proximal Method of Multipliers, suitable for solving linear and convex quadratic
 % programming problems. The method takes as input a problem of the following form:
@@ -122,7 +122,7 @@ while (iter < maxit)
     % ---------------------------------------------------------------------------------------------------------------- %
     pivot_thr = reg_limit;
     %pivot_thr    = 1e-8;
-    NS = Newton_factorization(A,A_tr,Q,x,z,delta,rho,pos_vars,free_variables,pivot_thr);
+    NS = Newton_factorization(A,A_tr,Q,x,z,delta,rho,pos_vars,free_variables,pivot_thr, Struct);
     % ================================================================================================================ %
    switch pc
         case 1 % No predictor-corrector. 
@@ -145,7 +145,7 @@ while (iter < maxit)
         % ============================================================================================================ %
         % Solve the Newton system and calculate residuals.
         % ------------------------------------------------------------------------------------------------------------ %
-        [dx,dy,dz,instability] = Newton_backsolve(NS,res_p,res_d,res_mu,pos_vars,free_variables);
+        [dx,dy,dz,instability] = Newton_backsolve(NS,res_p,res_d,res_mu,pos_vars,free_variables, Struct);
         if (instability == true) % Checking if the matrix is too ill-conditioned. Mitigate it.
             if (retry < max_tries)
                 fprintf('The system is re-solved, due to bad conditioning.\n')
@@ -170,7 +170,7 @@ while (iter < maxit)
         % Solve the Newton system with the predictor right hand side -> Optimistic view, solve as if you wanted to 
         %                                                               solve the original problem in 1 iteration.
         % ------------------------------------------------------------------------------------------------------------ %
-        [dx,dy,dz,instability] = Newton_backsolve(NS,res_p,res_d,res_mu,pos_vars,free_variables);
+        [dx,dy,dz,instability] = Newton_backsolve(NS,res_p,res_d,res_mu,pos_vars,free_variables, Struct);
         if (instability == true) % Checking if the matrix is too ill-conditioned. Mitigate it.
             if (retry_p < max_tries)
                 fprintf('The system is re-solved, due to bad conditioning  of predictor system.\n')
@@ -214,7 +214,7 @@ while (iter < maxit)
         % Solve the Newton system with the predictor right hand side -> Optimistic view, solve as if you wanted to 
         %                                                               solve the original problem in 1 iteration.
         % ------------------------------------------------------------------------------------------------------------ %
-        [dx_c,dy_c,dz_c,instability] = Newton_backsolve(NS,zeros(m,1),zeros(n,1),res_mu,pos_vars,free_variables);
+        [dx_c,dy_c,dz_c,instability] = Newton_backsolve(NS,zeros(m,1),zeros(n,1),res_mu,pos_vars,free_variables, Struct);
         if (instability == true) % Checking if the matrix is too ill-conditioned. Mitigate it.
             if (retry_c < max_tries)
                 fprintf('The system is re-solved, due to bad conditioning of corrector.\n')

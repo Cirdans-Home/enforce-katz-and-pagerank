@@ -142,7 +142,7 @@ while (iter < maxit)
     
     [x,y,z,Info.IPM(iter)] = prox_eval(c,A,A_tr,Q,b,xk,yk,zk,rho,delta,...
                                        free_variables,pos_vars,num_of_pos_vars,...
-                                       PPM_red^iter,IPM_maxit,pc,printlevel);
+                                       PPM_red^iter,IPM_maxit,pc,printlevel,IterStruct);
     
     IPM_Tot_It = Info.IPM(iter).IPMIter+IPM_Tot_It;  
     last_nnz    = Info.IPM(iter).nnz;

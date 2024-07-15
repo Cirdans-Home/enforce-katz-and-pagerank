@@ -30,19 +30,21 @@ fprintf(fileID4,'Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs
 
 seed = 10;
 rng(seed)
-total_iters                     = 0;
-total_time                      = 0;
-total_IPM_iters                 = 0;
-scaling                      = 1;
+total_iters                       = 0;
+total_time                       = 0;
+total_IPM_iters              = 0;
+scaling                           = 1;
 scaling_option               = 1; % Do not Change Scaling Options
-scaling_direction            = 'l'; % Do not Change Scaling Options
-tol                             = 1e-8;
-pc_mode                         = 2;
-print_mode                      = 3;
-problems_converged              = 0;
-plot_fig                        = 0;
-rho                             = 1e-10;
-delta                           = rho; 
+scaling_direction           = 'l'; % Do not Change Scaling Options
+tol                                  = 1e-8;
+pc_mode                       = 2;
+print_mode                    = 3;
+problems_converged    = 0;
+plot_fig                         = 0;
+rho                                = 1e-10;
+Struct                           = struct();
+Struct.Fact                   = 'chol';
+delta                             = rho; 
 for k =  7 %1:length(d)
    model       = struct();
    load(fullfile(QP_problems_path,d(k).name));
@@ -100,11 +102,10 @@ for k =  7 %1:length(d)
 
    % Running the solver
     free_variables = [];
-    IterStruct         = struct();
     time                 = 0; 
     tic;
     [xfinalvec,y,z,Info] = PPM_IPM(-2*model.g,model.L,model.b,model.H,free_variables,tol,200,...
-                                         pc_mode,print_mode,IterStruct,rho,delta); 
+                                         pc_mode,print_mode,Struct,rho,delta); 
     time                 = time                 + toc;
     total_time        = total_time         + time;
     opt                   = Info.opt;
@@ -151,11 +152,10 @@ for k =  7 %1:length(d)
 
    % Running the solver
     free_variables = [];
-    IterStruct           = struct();
     time                 = 0; 
     tic;
     [xfinalvec,y,z,Info] = PPM_IPM(-2*model.g,model.L,model.b,model.H,free_variables,tol,200,...
-                                         pc_mode,print_mode,IterStruct,rho,delta); 
+                                         pc_mode,print_mode,Struct,rho,delta); 
     time                 = time                 + toc;
     total_time        = total_time         + time;
     opt                   = Info.opt;
@@ -211,11 +211,10 @@ for k =  7 %1:length(d)
      
     % Running the solver
     free_variables = [];
-    IterStruct=struct();
     time = 0; 
     tic;
     [xfinalvec_L1_long,y_L1,z_L1,Info_L1] = PPM_IPM(model.g,model.L,model.b,model.H,free_variables,tol,200,...
-                                         pc_mode,print_mode,IterStruct,rho,delta); 
+                                         pc_mode,print_mode,Struct,rho,delta); 
     time = time + toc;
     total_time = total_time + time;
     opt     = Info_L1.opt;
@@ -265,11 +264,10 @@ for k =  7 %1:length(d)
      
     % Running the solver
     free_variables = [];
-    IterStruct=struct();
     time = 0; 
     tic;
     [xfinalvec_L1_long,y_L1,z_L1,Info_L1] = PPM_IPM(model.g,model.L,model.b,model.H,free_variables,tol,200,...
-                                         pc_mode,print_mode,IterStruct,rho,delta); 
+                                         pc_mode,print_mode,Struct,rho,delta); 
     time = time + toc;
     total_time = total_time + time;
     opt     = Info_L1.opt;

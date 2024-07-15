@@ -30,21 +30,22 @@ fprintf(fileID4,'Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs
 
 seed                         = 10;
 rng(seed)
-total_iters                  = 0;
-total_time                   = 0;
-total_IPM_iters              = 0;
-scaling                      = 1;
-scaling_option               = 1; % Do not Change Scaling Options
-scaling_direction            = 'l'; % Do not Change Scaling Options
-tol                          = 1e-8;
+total_iters                     = 0;
+total_time                     = 0;
+total_IPM_iters             = 0;
+scaling                          = 1;
+scaling_option              = 1; % Do not Change Scaling Options
+scaling_direction          = 'l'; % Do not Change Scaling Options
+tol                                 = 1e-8;
 pc_mode                      = 2;
 print_mode                   = 3;
 problems_converged   = 0;
 plot_fig                         = 0; 
-IterStruct                      = struct();
-rho                               = 1e-10;
+Struct                           = struct();
+Struct.Fact                   = 'chol';
+rho                               = 1e-8;
 delta                             = rho;
-for k = 1:length(d)
+for k = 7 %1:length(d)
    model       = struct();
    load(fullfile(QP_problems_path,d(k).name));
    model.name = d(k).name
@@ -77,12 +78,10 @@ for k = 1:length(d)
    P                             = spones(Problem.A+speye(n));
    proj                         = pattern_projector(P);  % Projector Onto the Pattern of A
    reduced_size          = size(proj,1);
-   K                             = commutation(n);
-   index  = []; 
-   for kk  = 1:n
-    index  = [index, kk+ (kk-1)*n]; 
-   end
-   [free_variables,~] = find(proj(:,index));
+   K                             = commutation(n); 
+   kk                            =   1:n;
+   index                       = kk+ (kk-1)*n; 
+   [free_variables,~]    = find(proj(:,index));
    fprintf(fileID,'      %s      &  %s     &   %d   & %d   & 1 \\\\   \n', model.name, Problem.kind, n, nnz(P) ); 
 
 
@@ -112,7 +111,7 @@ for k = 1:length(d)
     time                 = 0; 
     tic;
     [xfinalvec,y,z,Info] = PPM_IPM(-2*model.g,model.L,model.b,model.H,free_variables,tol,200,...
-                                         pc_mode,print_mode,IterStruct,rho,delta); 
+                                         pc_mode,print_mode,Struct,rho,delta); 
    
 
     time                 = time                 + toc;
@@ -174,7 +173,7 @@ for k = 1:length(d)
     time                 = 0; 
     tic;
     [xfinalvec,y,z,Info] = PPM_IPM(-2*model.g,model.L,model.b,model.H,free_variables,tol,200,...
-                                         pc_mode,print_mode,IterStruct,rho,delta); 
+                                         pc_mode,print_mode,Struct,rho,delta); 
 
 
 
@@ -246,7 +245,7 @@ for k = 1:length(d)
     time                 = 0; 
     tic;
     [xfinalvec_L1_long,y_L1,z_L1,Info_L1] = PPM_IPM(model.g,model.L,model.b,model.H,free_variables,tol,200,...
-                                         pc_mode,print_mode,IterStruct,rho,delta); 
+                                         pc_mode,print_mode,Struct,rho,delta); 
 
     time = time + toc;
     total_time = total_time + time;
@@ -312,7 +311,7 @@ for k = 1:length(d)
     time                 = 0; 
     tic;
     [xfinalvec_L1_long,y_L1,z_L1,Info_L1] = PPM_IPM(model.g,model.L,model.b,model.H,free_variables,tol,200,...
-                                         pc_mode,print_mode,IterStruct,rho,delta); 
+                                         pc_mode,print_mode,Struct,rho,delta); 
    
  
  

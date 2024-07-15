@@ -171,4 +171,78 @@
  The total IPPM iterates were: 21, 
  The total time was: 6.386795e-01 and 4 problems converged.
  The Stopping tol was: 1.00e-08 
+        Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      EX5.mat      &  combinatorial problem     &   6545   & 302225   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      gre_1107.mat      &  directed weighted graph     &   1107   & 5664   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+ The total PPM iterates were: 49, 
+ The total IPPM iterates were: 49, 
+ The total time was: 3.649758e+00 and 4 problems converged.
+ The Stopping tol was: 1.00e-08 
+        Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+ The total PPM iterates were: 49, 
+ The total IPPM iterates were: 49, 
+ The total time was: 3.536130e+00 and 4 problems converged.
+ The Stopping tol was: 1.00e-08 
+        Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+ The total PPM iterates were: 49, 
+ The total IPPM iterates were: 49, 
+ The total time was: 3.485322e+00 and 4 problems converged.
+ The Stopping tol was: 1.00e-08 
+        Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 13674   &  1 \\   
+ The total PPM iterates were: 21, 
+ The total IPPM iterates were: 21, 
+ The total time was: 7.075381e-01 and 4 problems converged.
+ The Stopping tol was: 1.00e-08 
+        Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 13674   &  1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+ The total PPM iterates were: 49, 
+ The total IPPM iterates were: 49, 
+ The total time was: 3.562967e+00 and 4 problems converged.
+ The Stopping tol was: 1.00e-08 
+        Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+       Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 18498   & 1 \\   
+ The total PPM iterates were: 49, 
+ The total IPPM iterates were: 49, 
+ The total time was: 1.743194e+00 and 4 problems converged.
+ The Stopping tol was: 1.00e-08 
+        Problem      &  Type   &   Size   & NNz   & Connected Comp \\   
+      uk.mat      &  undirected graph     &   4824   & 13674   &  1 \\   
+ The total PPM iterates were: 21, 
+ The total IPPM iterates were: 21, 
+ The total time was: 4.833076e-01 and 4 problems converged.
+ The Stopping tol was: 1.00e-08 
  

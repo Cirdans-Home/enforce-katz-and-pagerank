@@ -3,3 +3,8 @@ Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact
 Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact & Kendal & RBO \\    
 Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact & Kendal & RBO \\    
  7 ]  & 13674           & 5       & 1.6e-01    & 2.044e-09      & 0        & 0          & 114216  &   1.00   &   1.00 \\   
+Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact & Kendal & RBO \\    
+ 7 ]  & 13674           & 5       & 2.0e-01    & 2.044e-09      & 0        & 0          & 114216  &   1.00   &   1.00 \\   
+Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact & Kendal & RBO \\    
+Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact & Kendal & RBO \\    
+ 7 ]  & 13674           & 5       & 1.2e-01    & 2.044e-09      & 0        & 0          & 32172  &   1.00   &   1.00 \\   
