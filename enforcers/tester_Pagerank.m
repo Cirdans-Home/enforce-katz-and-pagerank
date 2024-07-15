@@ -25,7 +25,7 @@ muhat(min_ind)  = mu(max_ind);
    
 
 
-beta    = 0.08;
+beta    = 0.1;
 P         = spones(A+spdiags(e,0,n,n));
 [Delta,stat,mucheck,rhat] = enforce_pagerank(A,alpha,muhat,v,P,beta,1e-8);
 fprintf('Objective: %e\n',beta*norm(Delta,"fro")^2 + (1-beta)*norm(Delta,1));

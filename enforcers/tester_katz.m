@@ -2,7 +2,7 @@
 
 clear; clc; close all;
 
-load("../matrices/karate.mat");
+load("../testmatrices/uk.mat");
 A       = Problem.A;
 rhoA    = eigs(A,1,"largestabs");
 alpha   = 1/(2*rhoA);

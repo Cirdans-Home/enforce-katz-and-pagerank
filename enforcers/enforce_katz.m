@@ -36,7 +36,8 @@ if beta == 1
     % Running the solver
     free_variables = [];
     IterStruct     = struct();
-    rho            = 1e-9;
+    IterStruct.Fact                   = 'chol';
+    rho               = 1e-9;
     delta          = rho;
     pc_mode        = 2;
     tic;
@@ -54,12 +55,13 @@ if beta == 1
         delta);
     elapstime = toc;
     if nargout >= 2
-        varargout{1}.time       = elapstime;
-        varargout{1}.opt        = Info.opt;
-        varargout{1}.IPMiter    = Info.IPM_It;
+         varargout{1}.time          = elapstime;
+        varargout{1}.opt            = Info.opt;
+        varargout{1}.iter            = Info.ExIt;
+        varargout{1}.IPMiter     = Info.IPM_It;
         varargout{1}.primalres  = [Info.NatRes.primal];
-        varargout{1}.dualres    = [Info.NatRes.dual];
-        varargout{1}.compl      = [Info.NatRes.compl];
+        varargout{1}.dualres     = [Info.NatRes.dual];
+        varargout{1}.compl       = [Info.NatRes.compl];
     end
 
     % Recover Matrix and Desired Ranking
@@ -85,8 +87,9 @@ else
         - speye(reduced_size), speye(reduced_size),      -speye(reduced_size)];
     % Running the solver
     free_variables = [];
-    IterStruct=struct();
-    rho            = 1e-9;
+    IterStruct     = struct();
+    IterStruct.Fact                   = 'chol';
+    rho               = 1e-9;
     delta          = rho;
     pc_mode        = 2;
     tic;
@@ -259,7 +262,7 @@ while (iter < maxit)
     end
     [x,y,z,Info.IPM(iter)] = prox_eval(c,A,A_tr,Q,b,xk,yk,zk,rho,delta,...
         free_variables,pos_vars,num_of_pos_vars,...
-        PPM_red^iter,IPM_maxit,pc,printlevel);
+        PPM_red^iter,IPM_maxit,pc,printlevel,IterStruct );
     IPM_Tot_It = Info.IPM(iter).IPMIter+IPM_Tot_It;
     last_nnz    = Info.IPM(iter).nnz;
     if Info.IPM(iter).opt == 2
@@ -313,7 +316,7 @@ end
 
 function [x,y,z,OInfo] = prox_eval(c,A,A_tr,Q,b,xk,yk,zk,rho,delta,...
     free_variables,pos_vars,num_of_pos_vars,...
-    tol,maxit,pc,pl)
+    tol,maxit,pc,pl,IterStruct)
 % ==================================================================================================================== %
 % This function is an Interior Point-Proximal Method of Multipliers, suitable for solving linear and convex quadratic
 % programming problems. The method takes as input a problem of the following form:
@@ -433,7 +436,7 @@ while (iter < maxit)
     % ---------------------------------------------------------------------------------------------------------------- %
     pivot_thr = reg_limit;
     %pivot_thr    = 1e-8;
-    NS = Newton_factorization(A,A_tr,Q,x,z,delta,rho,pos_vars,free_variables,pivot_thr);
+    NS = Newton_factorization(A,A_tr,Q,x,z,delta,rho,pos_vars,free_variables,pivot_thr,IterStruct );
     % ================================================================================================================ %
     switch pc
         case 1 % No predictor-corrector.
@@ -456,7 +459,7 @@ while (iter < maxit)
             % ============================================================================================================ %
             % Solve the Newton system and calculate residuals.
             % ------------------------------------------------------------------------------------------------------------ %
-            [dx,dy,dz,instability] = Newton_backsolve(NS,res_p,res_d,res_mu,pos_vars,free_variables);
+            [dx,dy,dz,instability] = Newton_backsolve(NS,res_p,res_d,res_mu,pos_vars,free_variables,IterStruct );
             if (instability == true) % Checking if the matrix is too ill-conditioned. Mitigate it.
                 if (retry < max_tries)
                     fprintf('The system is re-solved, due to bad conditioning.\n')
@@ -481,7 +484,7 @@ while (iter < maxit)
             % Solve the Newton system with the predictor right hand side -> Optimistic view, solve as if you wanted to
             %                                                               solve the original problem in 1 iteration.
             % ------------------------------------------------------------------------------------------------------------ %
-            [dx,dy,dz,instability] = Newton_backsolve(NS,res_p,res_d,res_mu,pos_vars,free_variables);
+            [dx,dy,dz,instability] = Newton_backsolve(NS,res_p,res_d,res_mu,pos_vars,free_variables,IterStruct );
             if (instability == true) % Checking if the matrix is too ill-conditioned. Mitigate it.
                 if (retry_p < max_tries)
                     fprintf('The system is re-solved, due to bad conditioning  of predictor system.\n')
@@ -525,7 +528,7 @@ while (iter < maxit)
             % Solve the Newton system with the predictor right hand side -> Optimistic view, solve as if you wanted to
             %                                                               solve the original problem in 1 iteration.
             % ------------------------------------------------------------------------------------------------------------ %
-            [dx_c,dy_c,dz_c,instability] = Newton_backsolve(NS,zeros(m,1),zeros(n,1),res_mu,pos_vars,free_variables);
+            [dx_c,dy_c,dz_c,instability] = Newton_backsolve(NS,zeros(m,1),zeros(n,1),res_mu,pos_vars,free_variables,IterStruct );
             if (instability == true) % Checking if the matrix is too ill-conditioned. Mitigate it.
                 if (retry_c < max_tries)
                     fprintf('The system is re-solved, due to bad conditioning of corrector.\n')
@@ -674,7 +677,7 @@ r{2}  = A*x-b+delta.*(y-yk);
 npres = norm(r{1})+norm(r{2});
 end
 
-function NS = Newton_factorization(A,A_tr,Q,x,z,delta,rho,pos_vars,free_vars,pivot_thr)
+function NS = Newton_factorization(A,A_tr,Q,x,z,delta,rho,pos_vars,free_vars,pivot_thr,Struct)
 % ==================================================================================================================== %
 % Newton_factorization: Factorize the Newton matrix
 % -------------------------------------------------------------------------------------------------------------------- %
@@ -682,9 +685,9 @@ function NS = Newton_factorization(A,A_tr,Q,x,z,delta,rho,pos_vars,free_vars,piv
 %      factorization of the Newton matrix for solving the step equations in
 %      the IPM, as well as relevant information concerning failure.
 % Factorization Method
-% --------------------
-% 1: augmented system, LDL' factorization.
-%
+  % --------------------
+  % 1: augmented system, LDL' factorization.
+% 
 % Author: S.Cipolla, J. Gondzio.
 % ==================================================================================================================== %
 [m, n] = size(A);
@@ -693,7 +696,7 @@ NS = struct();
 % LDL' factorization of KKT matrix
 % -------------------------------------------------------------------------------------------------------------------- %
 %
-% MATLAB uses MA57 when K is sparse, which is not available in OCTAVE.
+% MATLAB uses MA57 when K is sparse, which is not available in OCTAVE. 
 % -------------------------------------------------------------------------------------------------------------------- %
 NS.x = x;
 NS.z = z;
@@ -704,20 +707,29 @@ if (size(pos_vars,1) > 0)
 else
     Q_bar(:) = rho;
 end
-K = [Q+spdiags(Q_bar,0,n,n), A_tr; A, -spdiags(delta.*ones(m,1),0,m,m)];
-%condest(K)
-[NS.L,NS.D,NS.pp] = ldl(K,pivot_thr,'vector'); %Small pivots allowed, to avoid 2x2 pivots.
 
-NS.nnz   =  nnz(NS.L);
+if strcmp(Struct.Fact,'ldl')
+    K = [Q+spdiags(Q_bar,0,n,n), A_tr; A, -spdiags(delta.*ones(m,1),0,m,m)]; 
+    %condest(K)
+    [NS.L,NS.D,NS.pp] = ldl(K,pivot_thr,'vector'); %Small pivots allowed, to avoid 2x2 pivots.
+    NS.nnz   =  nnz(NS.L);
+else
+    NS.A = A;
+    NS.D =  Q+spdiags(Q_bar,0,n,n); %  1./Q_bar;
+    K       = A*(NS.D\A_tr)+spdiags(delta.*ones(m,1),0,m,m);
+    [NS.L,~,NS.pp] = chol(K, 'vector');  
+    NS.nnz   =  nnz(NS.L);
+end
 
-% ==================================================================================================================== %
-
+% ==================================================================================================================== %  
+ 
 % ******************************************************************************************************************** %
 % END OF FILE.
 % ******************************************************************************************************************** %
 end
 
-function [dx,dy,dz,instability] = Newton_backsolve(NS,res_p,res_d,res_mu,pos_vars,free_vars)
+
+function [dx,dy,dz,instability] = Newton_backsolve(NS,res_p,res_d,res_mu,pos_vars,free_vars, Struct)
 % ==================================================================================================================== %
 % Newton_backsolve    Solve linear system with factorized matrix, by using backward substitution.
 % -------------------------------------------------------------------------------------------------------------------- %
@@ -739,35 +751,50 @@ end
 % ==================================================================================================================== %
 % Solve KKT system with LDL' factors.
 % -------------------------------------------------------------------------------------------------------------------- %
+if strcmp(Struct.Fact,'ldl')
+    if (size(pos_vars,1) > 0)
+        temp_res(pos_vars) =  res_mu(pos_vars)./(NS.x(pos_vars));
+        rhs = [res_d+temp_res; res_p];
+    else
+        rhs = [res_d; res_p];
+    end
+    warn_stat = warning;
+    warning('off','all');
+    lhs = NS.L'\(NS.D\(NS.L\rhs(NS.pp)));
+    if (nnz(isnan(lhs)) > 0 || nnz(isinf(lhs)) > 0)
+        instability = true;
+        return;
+    end
+    warning(warn_stat);
+    lhs(NS.pp) = lhs;
+    dx = lhs(1:n,1);
+    dy = -lhs(n+1:n+m,1);
+else % Chol
+    if (size(pos_vars,1) > 0)
+        temp_res(pos_vars) =  res_mu(pos_vars)./(NS.x(pos_vars));
+        res_d = res_d+temp_res;
+    end
+    warn_stat = warning;
+    %warning('off','all');
+    rhs = res_p-NS.A*(NS.D\res_d);
+    lhs  = NS.L\(NS.L.'\(rhs(NS.pp)));
+    dy(NS.pp)  = lhs;
+    if (nnz(isnan(dy)) > 0 || nnz(isinf(dy)) > 0)
+        instability = true;
+        return;
+    end
+    warning(warn_stat);
+    dx = NS.D\(NS.A.'*dy+res_d);
+end
+
 if (size(pos_vars,1) > 0)
-    temp_res(pos_vars) =  res_mu(pos_vars)./(NS.x(pos_vars));
-    rhs = [res_d+temp_res; res_p];
-else
-    rhs = [res_d; res_p];
+        dz(pos_vars) = (res_mu(pos_vars)-NS.z(pos_vars).*dx(pos_vars))./NS.x(pos_vars);
+        dz(free_vars) = 0;
 end
-warn_stat = warning;
-warning('off','all');
-lhs = NS.L'\(NS.D\(NS.L\rhs(NS.pp)));
-if (nnz(isnan(lhs)) > 0 || nnz(isinf(lhs)) > 0)
-    instability = true;
-    return;
-end
-warning(warn_stat);
-lhs(NS.pp) = lhs;
-dx = lhs(1:n,1);
-dy = -lhs(n+1:n+m,1);
-if (size(pos_vars,1) > 0)
-    dz(pos_vars) = (res_mu(pos_vars)-NS.z(pos_vars).*dx(pos_vars))./NS.x(pos_vars);
-    dz(free_vars) = 0;
-end
+
 % ==================================================================================================================== %
 
 % ******************************************************************************************************************** %
 % END OF FILE.
 % ******************************************************************************************************************** %
-end
-
-% ==================================================================================================================== %
-% ******************************************************************************************************************** %
-% END OF FILE
-% ******************************************************************************************************************** %
+end 

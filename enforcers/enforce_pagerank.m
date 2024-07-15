@@ -62,7 +62,8 @@ if beta == 1
 
     % Running the solver
     IterStruct     = struct();
-    rho               = 1e-14;
+    IterStruct.Fact                   = 'chol';
+    rho               = 1e-9;
     delta            = rho;
     pc_mode     = 2;
     tic;
@@ -139,8 +140,9 @@ else
     end
 
     % Running the solver
-    IterStruct=struct();
-    rho            = 1e-14;
+     IterStruct     = struct();
+     IterStruct.Fact                   = 'chol';
+    rho               = 1e-9;
     delta          = rho;
     pc_mode        = 2;
     tic;
@@ -189,7 +191,7 @@ end
 
 
 function [x,y,z,Info] = PPM_IPM(c,A,b,Q,free_variables,...
-    tol,maxit,pc,printlevel,~,rho,delta)
+    tol,maxit,pc,printlevel,IterStruct,rho,delta)
 %  IPM   Primal-dual Regularized interior-point method with decoupled variables.
 %
 %  This is the driver function of an IPM for solving the
@@ -330,7 +332,7 @@ while (iter < maxit)
     end
     [x,y,z,Info.IPM(iter)] = prox_eval(c,A,A_tr,Q,b,xk,yk,zk,rho,delta,...
         free_variables,pos_vars,num_of_pos_vars,...
-        PPM_red^iter,IPM_maxit,pc,printlevel);
+        PPM_red^iter,IPM_maxit,pc,printlevel,IterStruct);
     IPM_Tot_It = Info.IPM(iter).IPMIter+IPM_Tot_It;
     last_nnz    = Info.IPM(iter).nnz;
     if Info.IPM(iter).opt == 2
@@ -384,7 +386,7 @@ end
 
 function [x,y,z,OInfo] = prox_eval(c,A,A_tr,Q,b,xk,yk,zk,rho,delta,...
     free_variables,pos_vars,num_of_pos_vars,...
-    tol,maxit,pc,pl)
+    tol,maxit,pc,pl,IterStruct)
 % ==================================================================================================================== %
 % This function is an Interior Point-Proximal Method of Multipliers, suitable for solving linear and convex quadratic
 % programming problems. The method takes as input a problem of the following form:
@@ -504,7 +506,7 @@ while (iter < maxit)
     % ---------------------------------------------------------------------------------------------------------------- %
     pivot_thr = reg_limit;
     %pivot_thr    = 1e-8;
-    NS = Newton_factorization(A,A_tr,Q,x,z,delta,rho,pos_vars,free_variables,pivot_thr);
+    NS = Newton_factorization(A,A_tr,Q,x,z,delta,rho,pos_vars,free_variables,pivot_thr,IterStruct);
     % ================================================================================================================ %
     switch pc
         case 1 % No predictor-corrector.
@@ -527,7 +529,7 @@ while (iter < maxit)
             % ============================================================================================================ %
             % Solve the Newton system and calculate residuals.
             % ------------------------------------------------------------------------------------------------------------ %
-            [dx,dy,dz,instability] = Newton_backsolve(NS,res_p,res_d,res_mu,pos_vars,free_variables);
+            [dx,dy,dz,instability] = Newton_backsolve(NS,res_p,res_d,res_mu,pos_vars,free_variables,IterStruct);
             if (instability == true) % Checking if the matrix is too ill-conditioned. Mitigate it.
                 if (retry < max_tries)
                     fprintf('The system is re-solved, due to bad conditioning.\n')
@@ -552,7 +554,7 @@ while (iter < maxit)
             % Solve the Newton system with the predictor right hand side -> Optimistic view, solve as if you wanted to
             %                                                               solve the original problem in 1 iteration.
             % ------------------------------------------------------------------------------------------------------------ %
-            [dx,dy,dz,instability] = Newton_backsolve(NS,res_p,res_d,res_mu,pos_vars,free_variables);
+            [dx,dy,dz,instability] = Newton_backsolve(NS,res_p,res_d,res_mu,pos_vars,free_variables,IterStruct);
             if (instability == true) % Checking if the matrix is too ill-conditioned. Mitigate it.
                 if (retry_p < max_tries)
                     fprintf('The system is re-solved, due to bad conditioning  of predictor system.\n')
@@ -596,7 +598,7 @@ while (iter < maxit)
             % Solve the Newton system with the predictor right hand side -> Optimistic view, solve as if you wanted to
             %                                                               solve the original problem in 1 iteration.
             % ------------------------------------------------------------------------------------------------------------ %
-            [dx_c,dy_c,dz_c,instability] = Newton_backsolve(NS,zeros(m,1),zeros(n,1),res_mu,pos_vars,free_variables);
+            [dx_c,dy_c,dz_c,instability] = Newton_backsolve(NS,zeros(m,1),zeros(n,1),res_mu,pos_vars,free_variables,IterStruct);
             if (instability == true) % Checking if the matrix is too ill-conditioned. Mitigate it.
                 if (retry_c < max_tries)
                     fprintf('The system is re-solved, due to bad conditioning of corrector.\n')
@@ -745,7 +747,7 @@ r{2}  = A*x-b+delta.*(y-yk);
 npres = norm(r{1})+norm(r{2});
 end
 
-function NS = Newton_factorization(A,A_tr,Q,x,z,delta,rho,pos_vars,free_vars,pivot_thr)
+function NS = Newton_factorization(A,A_tr,Q,x,z,delta,rho,pos_vars,free_vars,pivot_thr,Struct)
 % ==================================================================================================================== %
 % Newton_factorization: Factorize the Newton matrix
 % -------------------------------------------------------------------------------------------------------------------- %
@@ -753,9 +755,9 @@ function NS = Newton_factorization(A,A_tr,Q,x,z,delta,rho,pos_vars,free_vars,piv
 %      factorization of the Newton matrix for solving the step equations in
 %      the IPM, as well as relevant information concerning failure.
 % Factorization Method
-% --------------------
-% 1: augmented system, LDL' factorization.
-%
+  % --------------------
+  % 1: augmented system, LDL' factorization.
+% 
 % Author: S.Cipolla, J. Gondzio.
 % ==================================================================================================================== %
 [m, n] = size(A);
@@ -764,7 +766,7 @@ NS = struct();
 % LDL' factorization of KKT matrix
 % -------------------------------------------------------------------------------------------------------------------- %
 %
-% MATLAB uses MA57 when K is sparse, which is not available in OCTAVE.
+% MATLAB uses MA57 when K is sparse, which is not available in OCTAVE. 
 % -------------------------------------------------------------------------------------------------------------------- %
 NS.x = x;
 NS.z = z;
@@ -775,20 +777,29 @@ if (size(pos_vars,1) > 0)
 else
     Q_bar(:) = rho;
 end
-K = [Q+spdiags(Q_bar,0,n,n), A_tr; A, -spdiags(delta.*ones(m,1),0,m,m)];
-%condest(K)
-[NS.L,NS.D,NS.pp] = ldl(K,pivot_thr,'vector'); %Small pivots allowed, to avoid 2x2 pivots.
 
-NS.nnz   =  nnz(NS.L);
+if strcmp(Struct.Fact,'ldl')
+    K = [Q+spdiags(Q_bar,0,n,n), A_tr; A, -spdiags(delta.*ones(m,1),0,m,m)]; 
+    %condest(K)
+    [NS.L,NS.D,NS.pp] = ldl(K,pivot_thr,'vector'); %Small pivots allowed, to avoid 2x2 pivots.
+    NS.nnz   =  nnz(NS.L);
+else
+    NS.A = A;
+    NS.D =  Q+spdiags(Q_bar,0,n,n); %  1./Q_bar;
+    K       = A*(NS.D\A_tr)+spdiags(delta.*ones(m,1),0,m,m);
+    [NS.L,~,NS.pp] = chol(K, 'vector');  
+    NS.nnz   =  nnz(NS.L);
+end
 
-% ==================================================================================================================== %
-
+% ==================================================================================================================== %  
+ 
 % ******************************************************************************************************************** %
 % END OF FILE.
 % ******************************************************************************************************************** %
 end
 
-function [dx,dy,dz,instability] = Newton_backsolve(NS,res_p,res_d,res_mu,pos_vars,free_vars)
+
+function [dx,dy,dz,instability] = Newton_backsolve(NS,res_p,res_d,res_mu,pos_vars,free_vars, Struct)
 % ==================================================================================================================== %
 % Newton_backsolve    Solve linear system with factorized matrix, by using backward substitution.
 % -------------------------------------------------------------------------------------------------------------------- %
@@ -810,149 +821,51 @@ end
 % ==================================================================================================================== %
 % Solve KKT system with LDL' factors.
 % -------------------------------------------------------------------------------------------------------------------- %
+if strcmp(Struct.Fact,'ldl')
+    if (size(pos_vars,1) > 0)
+        temp_res(pos_vars) =  res_mu(pos_vars)./(NS.x(pos_vars));
+        rhs = [res_d+temp_res; res_p];
+    else
+        rhs = [res_d; res_p];
+    end
+    warn_stat = warning;
+    warning('off','all');
+    lhs = NS.L'\(NS.D\(NS.L\rhs(NS.pp)));
+    if (nnz(isnan(lhs)) > 0 || nnz(isinf(lhs)) > 0)
+        instability = true;
+        return;
+    end
+    warning(warn_stat);
+    lhs(NS.pp) = lhs;
+    dx = lhs(1:n,1);
+    dy = -lhs(n+1:n+m,1);
+else % Chol
+    if (size(pos_vars,1) > 0)
+        temp_res(pos_vars) =  res_mu(pos_vars)./(NS.x(pos_vars));
+        res_d = res_d+temp_res;
+    end
+    warn_stat = warning;
+    %warning('off','all');
+    rhs = res_p-NS.A*(NS.D\res_d);
+    lhs  = NS.L\(NS.L.'\(rhs(NS.pp)));
+    dy(NS.pp)  = lhs;
+    if (nnz(isnan(dy)) > 0 || nnz(isinf(dy)) > 0)
+        instability = true;
+        return;
+    end
+    warning(warn_stat);
+    dx = NS.D\(NS.A.'*dy+res_d);
+end
+
 if (size(pos_vars,1) > 0)
-    temp_res(pos_vars) =  res_mu(pos_vars)./(NS.x(pos_vars));
-    rhs = [res_d+temp_res; res_p];
-else
-    rhs = [res_d; res_p];
+        dz(pos_vars) = (res_mu(pos_vars)-NS.z(pos_vars).*dx(pos_vars))./NS.x(pos_vars);
+        dz(free_vars) = 0;
 end
-warn_stat = warning;
-warning('off','all');
-lhs = NS.L'\(NS.D\(NS.L\rhs(NS.pp)));
-if (nnz(isnan(lhs)) > 0 || nnz(isinf(lhs)) > 0)
-    instability = true;
-    return;
-end
-warning(warn_stat);
-lhs(NS.pp) = lhs;
-dx = lhs(1:n,1);
-dy = -lhs(n+1:n+m,1);
-if (size(pos_vars,1) > 0)
-    dz(pos_vars) = (res_mu(pos_vars)-NS.z(pos_vars).*dx(pos_vars))./NS.x(pos_vars);
-    dz(free_vars) = 0;
-end
+
 % ==================================================================================================================== %
 
 % ******************************************************************************************************************** %
 % END OF FILE.
 % ******************************************************************************************************************** %
-end
-function [D,D_L] = Scale_the_problem(A,scale_option,direction)
-% ==================================================================================================================== %
-% [D] = Scale_the_problem(A): 
-% -------------------------------------------------------------------------------------------------------------------- %
-% This function, takes as an input a sparse matrix A, representing the constraints of a quadratic progrmaming problem.
-% It checks whether the matrix is well scaled, and if not, it applies some linear transformations to the matrix, in 
-% order to improve its numerical properties. The method return a diagonal matrix D, which the user should 
-% use in order to recover the solution of the initial problem (after solving the scaled one).
-% The optional parameter: scale_option. This parameter can take 3 values:
-%   (i)   scale_option = 0, no scaling will be applied.
-%   (ii)  scale_option = 1, iterative geometric scaling will be used.
-%   (iii) scale_option = 2, equilibrium scaling is employed.
-%   (iv)  scale_option = 3, nearest power of 2 scaling is used.
-%   (v)   scale_option = 4, mixed strategy, based on the properties of the respective row/column.
-% The optional parameter: direction. This parameter can take 3 values:
-%   (i)   direction = 'r', right scaling (default).
-%   (ii)  direction = 'l', left scaling.
-% For more information about these scaling choices, the reader is refered to:
-%                                   https://en.wikibooks.org/wiki/GLPK/Scaling
-%
-% Author: Spyridon Pougkakiotis.
-% ==================================================================================================================== %
-    if (nargin < 2 || isempty(scale_option))
-        scale_option = 1; % Set geometric scaling as the default option.
-    end
-    if (nargin < 3 || isempty(direction))
-        direction = 'r';
-    end
-    if (direction == 'l')
-        A = A';
-    end     
-    pos_A = abs(A);       % Need it to identify non-zero elements.
-    D = zeros(size(A,2),1);
-    D_L = [];
-    pos_ind = pos_A > 0;   
-    % ================================================================================================================ %
-    % Based on the input parameters, build the desired scaling factor.
-    % ---------------------------------------------------------------------------------------------------------------- %
-    if (max(max(pos_A)) <= 10 && min(min(abs(A(pos_ind))))>= 0.1 || scale_option == 0)
-        fprintf('No scaling necessary.\n'); % Well scaled or no scale.
-        D = ones(size(A,2),1);
-    elseif (scale_option == 1) % Geometric scaling (applied on columns for computational efficiency).
-        fprintf('The constraint matrix is scaled. Geometric scaling is employed.\n');
-        for j = 1:size(A,2)
-            rows = pos_A(:,j) > 0; % Find all non-zero elements for this column
-            if (any(rows))
-                %size(pos_A(rows,j))
-                maximum = max(pos_A(rows,j));
-                minimum = min(pos_A(rows,j));
-                if (maximum*minimum > 10^(-12) && maximum*minimum < 10^(12))
-                    D(j) = 1/sqrt(maximum*minimum);
-                else
-                    D(j) = 1;
-                end
-            else           
-                D(j) = 1; % Extreme case, where one column is all zeros.
-            end
-        end
-    elseif (scale_option == 2) % Equilibrium scaling (applied on columns for efficiency).
-        fprintf('The constraint matrix is scaled. Equilibrium scaling is employed.\n');
-        for j = 1:size(A,2)
-            rows = pos_A(:,j) > 0; % Find all non-zero elements for this column.
-            maximum = max(pos_A(rows,j));
-            if (maximum > 10^(-6))
-                D(j) = 1/maximum;
-            else
-                D(j) = 1;
-            end
-        end
-    elseif (scale_option == 3) % Nearest power of 2 scaling + geometric scaling (avoiding rounding errors).
-        fprintf('The constraint matrix is scaled. Geometric scaling with nearest power of 2 is employed.\n');
-        for j = 1:size(A,2)
-            rows = pos_A(:,j) > 0; % Find all non-zero elements for this column.
-            if (any(rows))
-                maximum = max(pos_A(rows,j));
-                minimum = min(pos_A(rows,j));
-                p = nextpow2(sqrt(maximum*minimum));
-                if (maximum*minimum > 10^(-12) && maximum*minimum < 10^(12))
-                    D(j) = 1/(2^(p-1));
-                else
-                    D(j) = 1;
-                end
-            else
-                D(j) = 1; % Extreme case, where one column is all zeros.
-            end
-        end
-    elseif (scale_option == 4)
-        fprintf('The constraint matrix is scaled. Mixed scaling is employed.\n');
-        for j = 1:size(A,2)
-            rows = pos_A(:,j) > 0; % Find all non-zero elements for this column
-            if (any(rows))
-                %size(pos_A(rows,j))
-                maximum = max(pos_A(rows,j));
-                minimum = min(pos_A(rows,j));
-                if (maximum > 10^3 && minimum < 10^(-3))
-                    p = nextpow2(sqrt(maximum*minimum));
-                    D(j) = 1/(2^(p-1));
-                elseif (1/minimum > maximum && minimum > 10^(-6))
-                    p = nextpow2(minimum);
-                    D(j) = 1/(2^(p-1));
-                elseif (maximum < 10^(6))
-                    p = nextpow2(maximum);
-                    D(j) = 1/(2^(p-1));
-                else
-                    D(j) = 1;
-                end
-            else           
-                D(j) = 1; % Extreme case, where one column is all zeros.
-            end
-        end
-    end
-    
-    % ================================================================================================================ %
-end
-% ******************************************************************************************************************** %
-% END OF FILE
-% ******************************************************************************************************************** %
-
+end 
 
