@@ -94,3 +94,9 @@ Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs     & nnz fact &
 Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs     & nnz fact & Kendal & RBO & rhat \\    
 Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs     & nnz fact & Kendal & RBO & rhat \\    
  7 ]  & 18498           & 21       & 8.1e-01    & 3.943e+00      & 2847        & 2929          & 145116  &   1.00  &    0.81 &    1.04 \\   
+Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs     & nnz fact & Kendal & RBO & rhat \\    
+Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs     & nnz fact & Kendal & RBO & rhat \\    
+ 7 ]  & 18498           & 21       & 8.3e-01    & 3.943e+00      & 2847        & 2929          & 145116  &   1.00  &    0.81 &    1.04 \\   
+Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs     & nnz fact & Kendal  & rhat \\    
+Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs     & nnz fact & Kendal  & rhat \\    
+ 7 ]  & 18498              & 19       & 0.54    & 5.860e-02      & 5917        & 5871          & 145116  &   0.98  &    1.09 \\   

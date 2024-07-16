@@ -16,17 +16,30 @@ d = dir(fullfile(QP_problems_path,'*.mat'));
 fileID = fopen('./Results_Figures/Dataset_Info.txt','a+');
 fprintf(fileID,'       Problem      &  Type   &   Size   & NNz   & Connected Comp \\\\   \n'); 
 
-fileID1 = fopen('./Results_Figures/Beta1_mu1.txt','a+');
-fprintf(fileID1,'Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs     & nnz fact & Kendal & RBO \\\\    \n'); 
+% fileID1 = fopen('./Results_Figures/K_Beta1_mu1.txt','a+');
+% fprintf(fileID1,'Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs     & nnz fact & Kendal & RBO \\\\    \n'); 
+% 
+% fileID2 = fopen('./Results_Figures/K_L1_mu1.txt','a+');
+% fprintf(fileID2,'Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs     & nnz fact & Kendal & RBO \\\\    \n'); 
+% 
+% fileID3 = fopen('./Results_Figures/K_Beta1_mu2.txt','a+');
+% fprintf(fileID3,'Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs      & nnz fact & Kendal & RBO \\\\    \n'); 
+% 
+% fileID4 = fopen('./Results_Figures/K_L1_m2.txt','a+');
+% fprintf(fileID4,'Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact & Kendal & RBO \\\\    \n'); 
+fileID1 = fopen('./Results_Figures/K_Beta1_mu1.txt','a+');
+fprintf(fileID1,'Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs     & nnz fact & Kendal \\\\    \n'); 
 
-fileID2 = fopen('./Results_Figures/L1_mu1.txt','a+');
-fprintf(fileID2,'Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs     & nnz fact & Kendal & RBO \\\\    \n'); 
+fileID2 = fopen('./Results_Figures/K_L1_mu1.txt','a+');
+fprintf(fileID2,'Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs     & nnz fact & Kendal  \\\\    \n'); 
 
-fileID3 = fopen('./Results_Figures/Beta1_mu2.txt','a+');
-fprintf(fileID3,'Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs      & nnz fact & Kendal & RBO \\\\    \n'); 
+fileID3 = fopen('./Results_Figures/K_Beta1_mu2.txt','a+');
+fprintf(fileID3,'Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs      & nnz fact & Kendal  \\\\    \n'); 
 
-fileID4 = fopen('./Results_Figures/L1_m2.txt','a+');
-fprintf(fileID4,'Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact & Kendal & RBO \\\\    \n'); 
+fileID4 = fopen('./Results_Figures/K_L1_m2.txt','a+');
+fprintf(fileID4,'Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs       & nnz fact & Kendal  \\\\    \n'); 
+
+
 
 seed = 10;
 rng(seed)
@@ -41,18 +54,18 @@ pc_mode                       = 2;
 print_mode                    = 3;
 problems_converged    = 0;
 plot_fig                         = 0;
-rho                                = 1e-10;
+rho                                = 1e-9;
 Struct                           = struct();
 Struct.Fact                   = 'chol';
 delta                             = rho; 
-for k =  7 %1:length(d)
+for k =  1:length(d)
    model       = struct();
    load(fullfile(QP_problems_path,d(k).name));
    model.name = d(k).name
    n = size(Problem.A,1);
    %% Computation of the "original" Katz centrality
-   I     = speye(n,n);
-   e     = ones(n,1);
+   I        = speye(n,n);
+   e       = ones(n,1);
    rhoA  = eigs(Problem.A,1,"largestabs");
    rhoA  = abs(rhoA);
    alpha = 0.5/rhoA;
@@ -66,21 +79,22 @@ for k =  7 %1:length(d)
    %muhat_2(min_ind)        = mu(max_ind);
    [~,bestmu] = sort(mu,"descend");   
    muhat_1                   = mu;
-   nindex                    = round(0.1*n);
+   nindex                      = round(0.20*n);
    muhat_1(bestmu(1:nindex)) = mean(mu(bestmu(1:nindex)));
 
    muhat_2                   = mu;
-   [~, max_ind]              = maxk(mu,100);
-   swap                      = muhat_2(max_ind(1:50));
-   muhat_2(max_ind(1:50))    = muhat_2(max_ind(51:100));
-   muhat_2(max_ind(51:100))  = swap;
+   muhat_2(1:nindex)   = mu(nindex:-1:1);
+   %[~, max_ind]              = maxk(mu,100);
+   %swap                      = muhat_2(max_ind(1:50));
+   %muhat_2(max_ind(1:50))    = muhat_2(max_ind(51:100));
+   %muhat_2(max_ind(51:100))  = swap;
 
 
 
    %% Pattern of the Perturbation Equals the Pattern of A
    P                             = spones(Problem.A);
    proj                          = pattern_projector(P);  % Projector Onto the Pattern of A
-   reduced_size                  = size(proj,1);
+   reduced_size           = size(proj,1);
    
  
   fprintf(fileID,'      %s      &  %s     &   %d   & %d   &  1 \\\\   \n', model.name, Problem.kind, n, nnz(P) ); 
@@ -121,18 +135,20 @@ for k =  7 %1:length(d)
      mufinal = (I - alpha*(Problem.A+xfinal))\e;
      % Compute Correlations
       [K_1,~]    = corr(mufinal,muhat_1,'type','Kendall');
-      [rbo_1,~] = rbosimilarity(mufinal,muhat_1,0.1);
+      % [rbo_1,~] = rbosimilarity(mufinal,muhat_1,0.1);
      % Print Details
      if (opt == 1)
        % Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs & nnz fact & Kendal & RBO 
        problems_converged = problems_converged + 1;
-       fprintf(fileID1,' %d ]  & %d           & %d       & %.1e    & %.3e      & %d        & %d          & %d  &   %.2f   &   %.2f \\\\   \n',...
-                           k,        reduced_size,  IPMiter,    time,       norm(xfinal,"fro"),    full(sum(xfinal(:) > 1e-10)),...
-                           full(sum(xfinal(:) < -1e-10)),        Info.nnz, K_1, rbo_1 ); 
+       fprintf(fileID1,' %d ]  & %d           & %d          & %1.2f    & %.3e        & %d        & %d          & %d  &   %.2f \\\\   \n',...
+                           k,        reduced_size,  IPMiter,    time,       norm(xfinal,"fro")/norm(Problem.A,"fro"),...
+                           full(sum(xfinal(:) > 1e-10)),...
+                           full(sum(xfinal(:) < -1e-10)), Info.nnz, K_1); 
     else
-      fprintf(fileID1,' %d ]  & %d           & %d       & %.1e    & %.3e      & %d        & %d          & %d  &   %.2f   &   %.2f  -- Non Opt \\\\  \n',...
-                           k,        reduced_size,  IPMiter,    time,       norm(xfinal,"fro"),    full(sum(xfinal(:) > 1e-10)),...
-                           full(sum(xfinal(:) < -1e-10)),        Info.nnz, K_1, rbo_1 ); 
+      fprintf(fileID1,' %d ]  & %d           & %d            & %1.2f   & %.3e         & %d        & %d          & %d  &   %.2f -- Non Opt \\\\  \n',...
+                           k,        reduced_size,  IPMiter,    time,       norm(xfinal,"fro")/norm(Problem.A,"fro"),...
+                           full(sum(xfinal(:) > 1e-10)),...
+                           full(sum(xfinal(:) < -1e-10)), Info.nnz, K_1); 
     end
    
     %%   ----> muhat_2 <----  Solution -- Without -- Sparsity Constraints --
@@ -156,11 +172,11 @@ for k =  7 %1:length(d)
     tic;
     [xfinalvec,y,z,Info] = PPM_IPM(-2*model.g,model.L,model.b,model.H,free_variables,tol,200,...
                                          pc_mode,print_mode,Struct,rho,delta); 
-    time                 = time                 + toc;
-    total_time        = total_time         + time;
-    opt                   = Info.opt;
-    iter                   = Info.ExIt;
-    IPMiter             = Info.IPM_It;
+    time                  = time                 + toc;
+    total_time         = total_time        + time;
+    opt                    = Info.opt;
+    iter                    = Info.ExIt;
+    IPMiter              = Info.IPM_It;
     total_IPM_iters = total_IPM_iters+IPMiter;
     total_iters          = total_iters        + iter; % PPM Iters
      % Recover Matrix and Desired Ranking
@@ -171,18 +187,20 @@ for k =  7 %1:length(d)
      mufinal = (I - alpha*(Problem.A+xfinal))\e;
      % Compute Correlations
       [K_1,~]    = corr(mufinal,muhat_2,'type','Kendall');
-      [rbo_1,~] = rbosimilarity(mufinal,muhat_2,0.1);
+     % [rbo_1,~] = rbosimilarity(mufinal,muhat_2,0.1);
      % Print Details
      if (opt == 1)
        % Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs & nnz fact & Kendal & RBO 
        problems_converged = problems_converged + 1;
-       fprintf(fileID3,' %d ]  & %d           & %d       & %.1e    & %.3e      & %d        & %d          & %d  &   %.2f  &    %.2f \\\\   \n',...
-                           k,        reduced_size,  IPMiter,    time,       norm(xfinal,"fro"),    full(sum(xfinal(:) > 1e-10)),...
-                           full(sum(xfinal(:) < -1e-10)),        Info.nnz, K_1, rbo_1 ); 
+       fprintf(fileID3,' %d ]  & %d           & %d          & %1.2f    & %.3e      & %d        & %d          & %d  &   %.2f  \\\\   \n',...
+                           k,        reduced_size,  IPMiter,    time,       norm(xfinal,"fro")/norm(Problem.A,"fro"),...
+                           full(sum(xfinal(:) > 1e-10)),...
+                           full(sum(xfinal(:) < -1e-10)), Info.nnz, K_1); 
     else
-      fprintf(fileID3,' %d ]  & %d           & %d       & %.1e    & %.3e      & %d        & %d          & %d  &   %.2f  &    %.2f  -- Non Opt \\\\ \n',...
-                           k,        reduced_size,  IPMiter,    time,       norm(xfinal,"fro"),    full(sum(xfinal(:) > 1e-10)),...
-                           full(sum(xfinal(:) < -1e-10)),        Info.nnz, K_1, rbo_1 ); 
+      fprintf(fileID3,' %d ]  & %d               & %d       & %1.2f    & %.3e             & %d        & %d          & %d  &   %.2f  -- Non Opt \\\\ \n',...
+                           k,        reduced_size,  IPMiter,    time,        norm(xfinal,"fro")/norm(Problem.A,"fro"),...
+                           full(sum(xfinal(:) > 1e-10)),...
+                           full(sum(xfinal(:) < -1e-10)), Info.nnz, K_1); 
     end
 
 
@@ -229,18 +247,20 @@ for k =  7 %1:length(d)
     mufinal_L1      = (I - alpha*(Problem.A+xfinal_L1))\e;
      % Compute Correlations
       [K_1_L1,~]    = corr(mufinal_L1,muhat_1,'type','Kendall');
-      [rbo_1_L1,~] = rbosimilarity(mufinal_L1,muhat_1,0.1);
+      %[rbo_1_L1,~] = rbosimilarity(mufinal_L1,muhat_1,0.1);
      % Print Details
      if (opt == 1)
        % Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs & nnz fact & Kendal & RBO 
        problems_converged = problems_converged + 1;
-       fprintf(fileID2,' %d ]  & %d           & %d       & %.1e    & %.3e      & %d        & %d          & %d   &  %.2f  &    %.2f  \\\\  \n',...
-                           k,        reduced_size,  IPMiter,    time,       norm(xfinal_L1,"fro"),    full(sum(xfinal_L1(:) > 1e-10)),...
-                           full(sum(xfinal_L1(:) < -1e-10)),        Info_L1.nnz, K_1_L1, rbo_1_L1 ); 
+       fprintf(fileID2,' %d ]  & %d              & %d        & %1.2f    & %.3e         & %d        & %d          & %d   &  %.2f \\\\  \n',...
+                           k,        reduced_size,  IPMiter,    time,       norm(xfinal,"fro")/norm(Problem.A,"fro"), ...
+                           full(sum(xfinal_L1(:) > 1e-10)),...
+                           full(sum(xfinal_L1(:) < -1e-10)),  Info_L1.nnz, K_1_L1); 
     else
-      fprintf(fileID2,' %d ]  & %d           & %d       & %.1e    & %.3e      & %d        & %d          & %d  &   %.2f  &    %.2f  -- Non Opt \\\\ \n',...
-                           k,        reduced_size,  IPMiter,    time,       norm(xfinal_L1,"fro"),    full(sum(xfinal_L1(:) > 1e-10)),...
-                           full(sum(xfinal_L1(:) < -1e-10)),        Info_L1.nnz, K_1, rbo_1 ); 
+      fprintf(fileID2,' %d ]  & %d               & %d       & %1.2e    & %.3e      & %d        & %d          & %d  &   %.2f -- Non Opt \\\\ \n',...
+                           k,        reduced_size,  IPMiter,    time,        norm(xfinal_L1,"fro")/norm(Problem.A,"fro"),...
+                           full(sum(xfinal_L1(:) > 1e-10)),...
+                           full(sum(xfinal_L1(:) < -1e-10)), Info_L1.nnz, K_1); 
     end
     
    %% ----> muhat_2 <----  Solution -- With -- Sparsity Constraints
@@ -282,18 +302,20 @@ for k =  7 %1:length(d)
     mufinal_L1      = (I - alpha*(Problem.A+xfinal_L1))\e;
      % Compute Correlations
       [K_1_L1,~]    = corr(mufinal_L1,muhat_2,'type','Kendall');
-      [rbo_1_L1,~] = rbosimilarity(mufinal_L1,muhat_2,0.1);
+      %[rbo_1_L1,~] = rbosimilarity(mufinal_L1,muhat_2,0.1);
      % Print Details
      if (opt == 1)
        % Prob. & Dim. & IPM Iter & Time & Norm Sol & Pos Arcs & Neg Arcs & nnz fact & Kendal & RBO 
        problems_converged = problems_converged + 1;
-       fprintf(fileID4,' %d ]  & %d           & %d       & %.1e    & %.3e      & %d        & %d          & %d  &   %.2f   &   %.2f \\\\   \n',...
-                           k,        reduced_size,  IPMiter,    time,       norm(xfinal_L1,"fro"),    full(sum(xfinal_L1(:) > 1e-10)),...
-                           full(sum(xfinal_L1(:) < -1e-10)),        Info_L1.nnz, K_1_L1, rbo_1_L1 ); 
+       fprintf(fileID4,' %d ]  & %d              & %d       & %1.2f    & %.3e      & %d        & %d          & %d  &   %.2f \\\\   \n',...
+                           k,        reduced_size,  IPMiter,    time,       norm(xfinal_L1,"fro"),...
+                           full(sum(xfinal_L1(:) > 1e-10)),...
+                           full(sum(xfinal_L1(:) < -1e-10)), Info_L1.nnz, K_1_L1); 
     else
-      fprintf(fileID4,' %d ]  & %d           & %d       & %.1e    & %.3e      & %d        & %d          & %d  &   %.2f &     %.2f  -- Non Opt \\\\ \n',...
-                           k,        reduced_size,  IPMiter,    time,       norm(xfinal_L1,"fro"),    full(sum(xfinal_L1(:) > 1e-10)),...
-                           full(sum(xfinal_L1(:) < -1e-10)),        Info_L1.nnz, K_1, rbo_1 ); 
+      fprintf(fileID4,' %d ]  & %d                & %d       & %1.2e   & %.3e      & %d        & %d          & %d  &   %.2f  -- Non Opt \\\\ \n',...
+                           k,        reduced_size,  IPMiter,    time,        norm(xfinal_L1,"fro")/norm(Problem.A,"fro"),...
+                           full(sum(xfinal_L1(:) > 1e-10)),...
+                           full(sum(xfinal_L1(:) < -1e-10)),        Info_L1.nnz, K_1); 
     end
 
     % Print Final Statistics
