@@ -36,16 +36,16 @@ total_IPM_iters             = 0;
 scaling                          = 1;
 scaling_option              = 1; % Do not Change Scaling Options
 scaling_direction          = 'l'; % Do not Change Scaling Options
-tol                                 = 1e-8;
+tol                                 = 1e-9;
 pc_mode                      = 2;
 print_mode                   = 3;
 problems_converged   = 0;
 plot_fig                         = 0; 
 Struct                           = struct();
 Struct.Fact                   = 'chol';
-rho                               = 1e-9;
+rho                               = 1e-12;
 delta                             = rho;
-for k = 1:length(d)
+for k = 1:2%1:length(d)
    model       = struct();
    load(fullfile(QP_problems_path,d(k).name));
    model.name = d(k).name
@@ -124,6 +124,7 @@ for k = 1:length(d)
     total_iters          = total_iters        + iter; % PPM Iters
      % Recover Matrix and Desired Ranking
      [ival,jval,~] = find(P);
+     xfinalvec(abs(xfinalvec)<1e-13)=0;
      xfinalvec    = xfinalvec -model.g;
      xfinal = sparse(ival,jval,xfinalvec,n,n);
      % Compute the optimizate PR centrality
@@ -189,6 +190,7 @@ for k = 1:length(d)
     total_iters          = total_iters        + iter; % PPM Iters
      % Recover Matrix and Desired Ranking
      [ival,jval,~] = find(P);
+     xfinalvec(abs(xfinalvec)<1e-13)=0;
      xfinalvec    = xfinalvec -model.g;
      xfinal = sparse(ival,jval,xfinalvec,n,n);
      % Compute the optimizate PR centrality
@@ -260,7 +262,9 @@ for k = 1:length(d)
     total_IPM_iters = total_IPM_iters+IPMiter;
     total_iters     = total_iters + iter; % PPM Iters
     % Recover Matrix
-    xfinalvec_L1    = xfinalvec_L1_long(1:reduced_size) -c;
+    xfinalvec_L1 = xfinalvec_L1_long(1:reduced_size);
+    xfinalvec_L1(abs(xfinalvec_L1)<1e-13)=0;
+    xfinalvec_L1    = xfinalvec_L1  -c;
     xfinal_L1          = sparse(ival,jval,xfinalvec_L1,n,n);
     % Compute the optimizate PR centrality
     rhat               = min(diag( spdiags(1./deg,0,n,n)*(Problem.A+xfinal_L1) ));
@@ -330,7 +334,9 @@ for k = 1:length(d)
     total_IPM_iters = total_IPM_iters+IPMiter;
     total_iters     = total_iters + iter; % PPM Iters
     % Recover Matrix
-    xfinalvec_L1    = xfinalvec_L1_long(1:reduced_size) -c;
+    xfinalvec_L1 = xfinalvec_L1_long(1:reduced_size);
+    xfinalvec_L1(abs(xfinalvec_L1)<1e-13)=0;
+    xfinalvec_L1    = xfinalvec_L1  -c;
     xfinal_L1          = sparse(ival,jval,xfinalvec_L1,n,n);
     % Compute the optimizate PR centrality
     rhat               = min(diag( spdiags(1./deg,0,n,n)*(Problem.A+xfinal_L1) ));

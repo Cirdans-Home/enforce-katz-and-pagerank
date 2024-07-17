@@ -44,7 +44,7 @@ else % Chol
         res_d = res_d+temp_res;
     end
     warn_stat = warning;
-    %warning('off','all');
+    warning('off','all');
     rhs = res_p-NS.A*(NS.D\res_d);
     lhs  = NS.L\(NS.L.'\(rhs(NS.pp)));
     dy(NS.pp)  = lhs;
