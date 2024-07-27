@@ -45,7 +45,7 @@ Struct                           = struct();
 Struct.Fact                   = 'chol';
 rho                               = 1e-12;
 delta                             = rho;
-for k = 5%1:length(d)
+for k = 3%1:length(d)
    model       = struct();
    load(fullfile(QP_problems_path,d(k).name));
    model.name = d(k).name
@@ -129,11 +129,17 @@ for k = 5%1:length(d)
      xfinal = sparse(ival,jval,xfinalvec,n,n);
      % Compute the optimizate PR centrality
      rhat         = min(diag( spdiags(1./deg,0,n,n)*(Problem.A+xfinal) ));
-     rhat         = 1- alpha*rhat;
-     r              = rhat;
-     alphahat = 1- (1-alpha)/r;
-     Phat        = 1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(Problem.A+xfinal))+(r-1).*speye(n) );
-     mufinal   =  (I - alphahat*Phat.')\((1-alphahat).*v) ;
+      
+     if rhat < 1e-8
+         rhat          = 1- alpha*rhat;
+         r               = rhat;
+         alphahat   = 1- (1-alpha)/r;
+         Phat         = 1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(Problem.A+xfinal))+(r-1).*speye(n) );
+         mufinal     =  (I - alphahat*Phat.')\((1-alphahat).*v) ;
+     else
+          rhat      = 0; 
+          mufinal =  (I - alpha*(spdiags(1./deg,0,n,n)*(Problem.A+xfinal)).')\((1-alpha).*v) ;
+     end
      % Compute Correlations
       [K_1,~]    = corr(mufinal,muhat_1,'type','Kendall');
       %[rbo_1,~] = rbosimilarity(mufinal,muhat_1,0.5);
@@ -195,11 +201,19 @@ for k = 5%1:length(d)
      xfinal = sparse(ival,jval,xfinalvec,n,n);
      % Compute the optimizate PR centrality
      rhat         = min(diag( spdiags(1./deg,0,n,n)*(Problem.A+xfinal) ));
-     rhat         = 1- alpha*rhat;
-     r              = rhat;
-     alphahat = 1- (1-alpha)/r;
-     Phat        = 1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(Problem.A+xfinal))+(r-1).*speye(n) );
-     mufinal   =  (I - alphahat*Phat.')\((1-alphahat).*v) ;
+
+
+     if rhat < 1e-8
+         rhat          = 1- alpha*rhat;
+         r               = rhat;
+         alphahat   = 1- (1-alpha)/r;
+         Phat         = 1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(Problem.A+xfinal))+(r-1).*speye(n) );
+         mufinal     =  (I - alphahat*Phat.')\((1-alphahat).*v) ;
+     else
+          rhat      = 0; 
+          mufinal =  (I - alpha*(spdiags(1./deg,0,n,n)*(Problem.A+xfinal)).')\((1-alpha).*v) ;
+     end
+
      % Compute Correlations
       [K_1,~]    = corr(mufinal,muhat_2,'type','Kendall');
       %[rbo_1,~] = rbosimilarity(mufinal,muhat_2,0.5);
@@ -268,11 +282,19 @@ for k = 5%1:length(d)
     xfinal_L1          = sparse(ival,jval,xfinalvec_L1,n,n);
     % Compute the optimizate PR centrality
     rhat               = min(diag( spdiags(1./deg,0,n,n)*(Problem.A+xfinal_L1) ));
-    rhat              = 1- alpha*rhat;
-    r                   = rhat;
-    alphahat      = 1- (1-alpha)/r;
-    Phat            = 1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(Problem.A+xfinal_L1))+(r-1).*speye(n) );
-    mufinal_L1  =  (I - alphahat*Phat.')\((1-alphahat).*v) ;
+
+   if rhat < 1e-8
+         rhat          = 1- alpha*rhat;
+         r               = rhat;
+         alphahat   = 1- (1-alpha)/r;
+         Phat         = 1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(Problem.A+xfinal_L1))+(r-1).*speye(n) );
+         mufinal_L1     =  (I - alphahat*Phat.')\((1-alphahat).*v) ;
+     else
+          rhat      = 0; 
+          mufinal_L1 =  (I - alpha*(spdiags(1./deg,0,n,n)*(Problem.A+xfinal_L1)).')\((1-alpha).*v) ;
+     end
+
+
      % Compute Correlations
       [K_1_L1,~]    = corr(mufinal_L1,muhat_1,'type','Kendall');
      % [rbo_1_L1,~] = rbosimilarity(mufinal_L1,muhat_1,0.5);
@@ -340,11 +362,18 @@ for k = 5%1:length(d)
     xfinal_L1          = sparse(ival,jval,xfinalvec_L1,n,n);
     % Compute the optimizate PR centrality
     rhat               = min(diag( spdiags(1./deg,0,n,n)*(Problem.A+xfinal_L1) ));
-    rhat              = 1- alpha*rhat;
-    r                   = rhat;
-    alphahat      = 1- (1-alpha)/r;
-    Phat            = 1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(Problem.A+xfinal_L1))+(r-1).*speye(n) );
-    mufinal_L1  =  (I - alphahat*Phat.')\((1-alphahat).*v) ;
+
+    if rhat < 1e-8
+         rhat          = 1- alpha*rhat;
+         r               = rhat;
+         alphahat   = 1- (1-alpha)/r;
+         Phat         = 1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(Problem.A+xfinal_L1))+(r-1).*speye(n) );
+         mufinal_L1     =  (I - alphahat*Phat.')\((1-alphahat).*v) ;
+     else
+          rhat            = 0; 
+          mufinal_L1 =  (I - alpha*(spdiags(1./deg,0,n,n)*(Problem.A+xfinal_L1)).')\((1-alpha).*v) ;
+    end
+
      % Compute Correlations
       [K_1_L1,~]    = corr(mufinal_L1,muhat_2,'type','Kendall');
       %[rbo_1_L1,~] = rbosimilarity(mufinal_L1,muhat_2,0.5);

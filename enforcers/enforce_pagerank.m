@@ -100,14 +100,23 @@ if beta == 1
     if nargout >= 3
         I              = speye(n,n);
         rhat         = min(diag( spdiags(1./deg,0,n,n)*(A+Delta) ));
-        rhat         = 1- alpha*rhat;
-        r              = rhat;
+        
+       if rhat < 1e-8
+             rhat          = 1- alpha*rhat;
+             r               = rhat;
+             alphahat   = 1- (1-alpha)/r;
+             Phat         = 1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(A+Delta))+(r-1).*speye(n) );
+             varargout{2}     =  (I - alphahat*Phat.')\((1-alphahat).*v) ;
+        else
+              rhat      = 0; 
+              varargout{2} =  (I - alpha*(spdiags(1./deg,0,n,n)*(A+Delta)).')\((1-alpha).*v) ;
+        end
         if nargout == 4
             varargout{3} = rhat;
         end
-        alphahat = 1- (1-alpha)/r;
-        Phat        =  1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(A+Delta))+(r-1).*speye(n) );
-        varargout{2} = (I - alphahat*Phat.')\((1-alphahat).*v) ;
+        % alphahat = 1- (1-alpha)/r;
+        % Phat        =  1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(A+Delta))+(r-1).*speye(n) );
+        % varargout{2} = (I - alphahat*Phat.')\((1-alphahat).*v) ;
     end
 
 else
@@ -169,14 +178,28 @@ else
     if nargout >= 3
         I              = speye(n,n);
         rhat         = min(diag( spdiags(1./deg,0,n,n)*(A+Delta) ));
-        rhat         = 1- alpha*rhat;
-        r              = rhat;
+        
+        
+         if rhat < 1e-8
+             rhat          = 1- alpha*rhat;
+             r               = rhat;
+             alphahat   = 1- (1-alpha)/r;
+             Phat         = 1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(A+Delta))+(r-1).*speye(n) );
+             varargout{2}     =  (I - alphahat*Phat.')\((1-alphahat).*v) ;
+        else
+              rhat      = 0; 
+              varargout{2} =  (I - alpha*(spdiags(1./deg,0,n,n)*(A+Delta)).')\((1-alpha).*v) ;
+        end
         if nargout == 4
             varargout{3} = rhat;
         end
-        alphahat = 1- (1-alpha)/r;
-        Phat        =  1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(A+Delta))+(r-1).*speye(n) );
-        varargout{2} = (I - alphahat*Phat.')\((1-alphahat).*v) ;
+        
+        % if nargout == 4
+        %     varargout{3} = rhat;
+        % end
+        % alphahat = 1- (1-alpha)/r;
+        % Phat        =  1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(A+Delta))+(r-1).*speye(n) );
+        % varargout{2} = (I - alphahat*Phat.')\((1-alphahat).*v) ;
     end
 end
 

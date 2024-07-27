@@ -2,7 +2,7 @@
 
 clear; clc; close all;
 
-load("../testmatrices/uk.mat");
+load("../testmatrices/cage10.mat");
 A       = Problem.A;
 alpha = 0.8;
 n        = size(A,1);
