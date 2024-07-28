@@ -2,12 +2,21 @@
 
 This folder contains the MATLAB scripts needed to reproduce the numerical experiments included in the paper.
 
-- `heatmaptest.m` produces the *preliiminary results* in Section 6.4.2 and saves them as a `.mat` file.
+- `small_example.m` produces the example on the Sioux Falls Road Network for enforcing Katz Centrality Measure,
+- `heatmaptest.m` produces the *preliiminary results* for the Katz centrality measure and saves them as a `.mat` file that can then be used to produce the figures in the paper with the `plot_heatmaps.m` script,
+- `Test_Katz_Forcing.m` produces the Scenarios 1 and 2 test for the Katz centrality measure
+- `Test_PR_Forcing.m` produces the Scenarios 1 and 2 test for the PageRank centrality measure
+- `comparison_with_TSDP.m` runs the comparison with the TSDP algorithm.
 
 
 > [!IMPORTANT]  
 > The tests use code that is contained in the `../enforcers` and `../Centrality_Forcing_IPM` folders. 
 > Make sure you have added them to the MATLAB path (`addpath(<path>)`).
+
+> [!WARNING]
+> Comparison with the TSDP algorithm requires cloning the repository with the 
+> `--recurse-submodules` option, see the information in the 
+> [main README](https://github.com/Cirdans-Home/enforce-katz-and-pagerank/blob/main/README.md) of the repository.
 
 ## Toeplitz
 
