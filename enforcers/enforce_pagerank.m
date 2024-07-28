@@ -15,6 +15,9 @@ function [Delta,varargout] = enforce_pagerank(A,alpha,pihat,v,P,beta,tol)
 %          stat structure containing statistics
 %          picheck vector of centralities computed with the perturbed
 %          matrix, in principle should be equal to the pihat entry
+%          rhat shift parameter to enforce positive diagonal entries, may be zero
+%          Phat modified probability transition matrix
+%
 
 if nargout >= 2
     varargout{1} = struct();
@@ -45,16 +48,16 @@ if beta == 1
     H      = 2*speye(reduced_size);
     work = spdiags(1./deg,0,n,n)*pihat;
     L       = [kron(work.',speye(n))*(K*proj.');...
-                 kron(ones(n,1).',speye(n))*proj.'];
+        kron(ones(n,1).',speye(n))*proj.'];
     g       = reshape(A,n*n,1);
     g(free_variables) = 0;
     g        = proj*g;
 
     b       = [   (1/alpha).*(pihat -(1-alpha).*v) - A.'*(spdiags(1./deg,0,n,n)*pihat)+kron(work.',speye(n))*(K*(proj.'*g) )  ;...
-                     kron(ones(n,1).',speye(n))*(proj.'*g) ];
+        kron(ones(n,1).',speye(n))*(proj.'*g) ];
 
-    
-     if (scaling == 1)
+
+    if (scaling == 1)
         DD = Scale_the_problem(L,scaling_option,scaling_direction);
         L = spdiags(DD,0,size(L,1),size(L,1))*L;  % Apply the left scaling.
         b = b.*DD;
@@ -100,33 +103,37 @@ if beta == 1
     if nargout >= 3
         I              = speye(n,n);
         rhat         = min(diag( spdiags(1./deg,0,n,n)*(A+Delta) ));
-        
-       if rhat < 1e-8
-             rhat          = 1- alpha*rhat;
-             r               = rhat;
-             alphahat   = 1- (1-alpha)/r;
-             Phat         = 1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(A+Delta))+(r-1).*speye(n) );
-             varargout{2}     =  (I - alphahat*Phat.')\((1-alphahat).*v) ;
+
+        if rhat < 1e-8
+            rhat          = 1- alpha*rhat;
+            r               = rhat;
+            alphahat   = 1- (1-alpha)/r;
+            Phat         = 1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(A+Delta))+(r-1).*speye(n) );
+            varargout{2}     =  (I - alphahat*Phat.')\((1-alphahat).*v) ;
         else
-              rhat      = 0; 
-              varargout{2} =  (I - alpha*(spdiags(1./deg,0,n,n)*(A+Delta)).')\((1-alpha).*v) ;
+            rhat      = 0;
+            varargout{2} =  (I - alpha*(spdiags(1./deg,0,n,n)*(A+Delta)).')\((1-alpha).*v) ;
         end
-        if nargout == 4
+        if nargout >= 4
             varargout{3} = rhat;
         end
+        if nargout >= 5
+            varargout{4} = Phat;
+        end
+
         % alphahat = 1- (1-alpha)/r;
         % Phat        =  1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(A+Delta))+(r-1).*speye(n) );
         % varargout{2} = (I - alphahat*Phat.')\((1-alphahat).*v) ;
     end
 
 else
-    constr_var = setdiff(1:1:reduced_size, free_variables); 
+    constr_var = setdiff(1:1:reduced_size, free_variables);
     % Solving with sparsity constraints
     tau = (1-beta)/beta;
     Q   = 2*speye(reduced_size);
     work = spdiags(1./deg,0,n,n)*pihat;
-    L       = [kron(work.',speye(n))*(K*proj.');...
-                 kron(ones(n,1).',speye(n))*proj.'];
+    L    = [kron(work.',speye(n))*(K*proj.');...
+        kron(ones(n,1).',speye(n))*proj.'];
 
 
     c       = reshape(A,n*n,1);
@@ -134,13 +141,13 @@ else
     c        = proj*c;
 
     b       = [   (1/alpha).*(pihat -(1-alpha).*v) - A.'*(spdiags(1./deg,0,n,n)*pihat)+kron(work.',speye(n))*(K*(proj.'*c) )  ;...
-                     kron(ones(n,1).',speye(n))*(proj.'*c) ];
+        kron(ones(n,1).',speye(n))*(proj.'*c) ];
     b        = [b;-c(constr_var)];
     H       = blkdiag(Q,sparse(length(constr_var),length(constr_var)),sparse(length(constr_var),length(constr_var)));
     g        = [-2.*c; tau.*ones(length(constr_var),1); tau.*ones(length(constr_var),1)];
     II        = speye(reduced_size);
     L        = [L, sparse(2*n,length(constr_var)), sparse(2*n,length(constr_var));...
-                  - II(constr_var,:),     speye(length(constr_var)),      -speye(length(constr_var))];
+        - II(constr_var,:),     speye(length(constr_var)),      -speye(length(constr_var))];
 
 
     if (scaling == 1)
@@ -150,11 +157,11 @@ else
     end
 
     % Running the solver
-     IterStruct     = struct();
-     IterStruct.Fact                   = 'chol';
-    rho               = 1e-9;
-    delta          = rho;
-    pc_mode        = 2;
+    IterStruct      = struct();
+    IterStruct.Fact = 'chol';
+    rho             = 1e-9;
+    delta           = rho;
+    pc_mode         = 2;
     tic;
     [Delta,~,~,Info] = PPM_IPM(g,L,b,H,free_variables,tol,200,...
         pc_mode,print_mode,IterStruct,rho,delta);
@@ -178,28 +185,24 @@ else
     if nargout >= 3
         I              = speye(n,n);
         rhat         = min(diag( spdiags(1./deg,0,n,n)*(A+Delta) ));
-        
-        
-         if rhat < 1e-8
-             rhat          = 1- alpha*rhat;
-             r               = rhat;
-             alphahat   = 1- (1-alpha)/r;
-             Phat         = 1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(A+Delta))+(r-1).*speye(n) );
-             varargout{2}     =  (I - alphahat*Phat.')\((1-alphahat).*v) ;
+
+
+        if rhat < 1e-8
+            rhat          = 1- alpha*rhat;
+            r               = rhat;
+            alphahat   = 1- (1-alpha)/r;
+            Phat         = 1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(A+Delta))+(r-1).*speye(n) );
+            varargout{2}     =  (I - alphahat*Phat.')\((1-alphahat).*v) ;
         else
-              rhat      = 0; 
-              varargout{2} =  (I - alpha*(spdiags(1./deg,0,n,n)*(A+Delta)).')\((1-alpha).*v) ;
+            rhat      = 0;
+            varargout{2} =  (I - alpha*(spdiags(1./deg,0,n,n)*(A+Delta)).')\((1-alpha).*v) ;
         end
-        if nargout == 4
+        if nargout >= 4
             varargout{3} = rhat;
         end
-        
-        % if nargout == 4
-        %     varargout{3} = rhat;
-        % end
-        % alphahat = 1- (1-alpha)/r;
-        % Phat        =  1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(A+Delta))+(r-1).*speye(n) );
-        % varargout{2} = (I - alphahat*Phat.')\((1-alphahat).*v) ;
+        if nargout >= 5
+            varargout{4} = Phat;
+        end
     end
 end
 
@@ -781,9 +784,9 @@ function NS = Newton_factorization(A,A_tr,Q,x,z,delta,rho,pos_vars,free_vars,piv
 %      factorization of the Newton matrix for solving the step equations in
 %      the IPM, as well as relevant information concerning failure.
 % Factorization Method
-  % --------------------
-  % 1: augmented system, LDL' factorization.
-% 
+% --------------------
+% 1: augmented system, LDL' factorization.
+%
 % Author: S.Cipolla, J. Gondzio.
 % ==================================================================================================================== %
 [m, n] = size(A);
@@ -792,7 +795,7 @@ NS = struct();
 % LDL' factorization of KKT matrix
 % -------------------------------------------------------------------------------------------------------------------- %
 %
-% MATLAB uses MA57 when K is sparse, which is not available in OCTAVE. 
+% MATLAB uses MA57 when K is sparse, which is not available in OCTAVE.
 % -------------------------------------------------------------------------------------------------------------------- %
 NS.x = x;
 NS.z = z;
@@ -805,7 +808,7 @@ else
 end
 
 if strcmp(Struct.Fact,'ldl')
-    K = [Q+spdiags(Q_bar,0,n,n), A_tr; A, -spdiags(delta.*ones(m,1),0,m,m)]; 
+    K = [Q+spdiags(Q_bar,0,n,n), A_tr; A, -spdiags(delta.*ones(m,1),0,m,m)];
     %condest(K)
     [NS.L,NS.D,NS.pp] = ldl(K,pivot_thr,'vector'); %Small pivots allowed, to avoid 2x2 pivots.
     NS.nnz   =  nnz(NS.L);
@@ -813,12 +816,12 @@ else
     NS.A = A;
     NS.D =  Q+spdiags(Q_bar,0,n,n); %  1./Q_bar;
     K       = A*(NS.D\A_tr)+spdiags(delta.*ones(m,1),0,m,m);
-    [NS.L,~,NS.pp] = chol(K, 'vector');  
+    [NS.L,~,NS.pp] = chol(K, 'vector');
     NS.nnz   =  nnz(NS.L);
 end
 
-% ==================================================================================================================== %  
- 
+% ==================================================================================================================== %
+
 % ******************************************************************************************************************** %
 % END OF FILE.
 % ******************************************************************************************************************** %
@@ -884,8 +887,8 @@ else % Chol
 end
 
 if (size(pos_vars,1) > 0)
-        dz(pos_vars) = (res_mu(pos_vars)-NS.z(pos_vars).*dx(pos_vars))./NS.x(pos_vars);
-        dz(free_vars) = 0;
+    dz(pos_vars) = (res_mu(pos_vars)-NS.z(pos_vars).*dx(pos_vars))./NS.x(pos_vars);
+    dz(free_vars) = 0;
 end
 
 % ==================================================================================================================== %
@@ -893,5 +896,122 @@ end
 % ******************************************************************************************************************** %
 % END OF FILE.
 % ******************************************************************************************************************** %
-end 
+end
 
+function [D,D_L] = Scale_the_problem(A,scale_option,direction)
+% ==================================================================================================================== %
+% [D] = Scale_the_problem(A):
+% -------------------------------------------------------------------------------------------------------------------- %
+% This function, takes as an input a sparse matrix A, representing the constraints of a quadratic progrmaming problem.
+% It checks whether the matrix is well scaled, and if not, it applies some linear transformations to the matrix, in
+% order to improve its numerical properties. The method return a diagonal matrix D, which the user should
+% use in order to recover the solution of the initial problem (after solving the scaled one).
+% The optional parameter: scale_option. This parameter can take 3 values:
+%   (i)   scale_option = 0, no scaling will be applied.
+%   (ii)  scale_option = 1, iterative geometric scaling will be used.
+%   (iii) scale_option = 2, equilibrium scaling is employed.
+%   (iv)  scale_option = 3, nearest power of 2 scaling is used.
+%   (v)   scale_option = 4, mixed strategy, based on the properties of the respective row/column.
+% The optional parameter: direction. This parameter can take 3 values:
+%   (i)   direction = 'r', right scaling (default).
+%   (ii)  direction = 'l', left scaling.
+% For more information about these scaling choices, the reader is refered to:
+%                                   https://en.wikibooks.org/wiki/GLPK/Scaling
+%
+% Author: Spyridon Pougkakiotis.
+% ==================================================================================================================== %
+if (nargin < 2 || isempty(scale_option))
+    scale_option = 1; % Set geometric scaling as the default option.
+end
+if (nargin < 3 || isempty(direction))
+    direction = 'r';
+end
+if (direction == 'l')
+    A = A';
+end
+pos_A = abs(A);       % Need it to identify non-zero elements.
+D = zeros(size(A,2),1);
+D_L = [];
+pos_ind = pos_A > 0;
+% ================================================================================================================ %
+% Based on the input parameters, build the desired scaling factor.
+% ---------------------------------------------------------------------------------------------------------------- %
+if (max(max(pos_A)) <= 10 && min(min(abs(A(pos_ind))))>= 0.1 || scale_option == 0)
+    fprintf('No scaling necessary.\n'); % Well scaled or no scale.
+    D = ones(size(A,2),1);
+elseif (scale_option == 1) % Geometric scaling (applied on columns for computational efficiency).
+    fprintf('The constraint matrix is scaled. Geometric scaling is employed.\n');
+    for j = 1:size(A,2)
+        rows = pos_A(:,j) > 0; % Find all non-zero elements for this column
+        if (any(rows))
+            %size(pos_A(rows,j))
+            maximum = max(pos_A(rows,j));
+            minimum = min(pos_A(rows,j));
+            if (maximum*minimum > 10^(-12) && maximum*minimum < 10^(12))
+                D(j) = 1/sqrt(maximum*minimum);
+            else
+                D(j) = 1;
+            end
+        else
+            D(j) = 1; % Extreme case, where one column is all zeros.
+        end
+    end
+elseif (scale_option == 2) % Equilibrium scaling (applied on columns for efficiency).
+    fprintf('The constraint matrix is scaled. Equilibrium scaling is employed.\n');
+    for j = 1:size(A,2)
+        rows = pos_A(:,j) > 0; % Find all non-zero elements for this column.
+        maximum = max(pos_A(rows,j));
+        if (maximum > 10^(-6))
+            D(j) = 1/maximum;
+        else
+            D(j) = 1;
+        end
+    end
+elseif (scale_option == 3) % Nearest power of 2 scaling + geometric scaling (avoiding rounding errors).
+    fprintf('The constraint matrix is scaled. Geometric scaling with nearest power of 2 is employed.\n');
+    for j = 1:size(A,2)
+        rows = pos_A(:,j) > 0; % Find all non-zero elements for this column.
+        if (any(rows))
+            maximum = max(pos_A(rows,j));
+            minimum = min(pos_A(rows,j));
+            p = nextpow2(sqrt(maximum*minimum));
+            if (maximum*minimum > 10^(-12) && maximum*minimum < 10^(12))
+                D(j) = 1/(2^(p-1));
+            else
+                D(j) = 1;
+            end
+        else
+            D(j) = 1; % Extreme case, where one column is all zeros.
+        end
+    end
+elseif (scale_option == 4)
+    fprintf('The constraint matrix is scaled. Mixed scaling is employed.\n');
+    for j = 1:size(A,2)
+        rows = pos_A(:,j) > 0; % Find all non-zero elements for this column
+        if (any(rows))
+            %size(pos_A(rows,j))
+            maximum = max(pos_A(rows,j));
+            minimum = min(pos_A(rows,j));
+            if (maximum > 10^3 && minimum < 10^(-3))
+                p = nextpow2(sqrt(maximum*minimum));
+                D(j) = 1/(2^(p-1));
+            elseif (1/minimum > maximum && minimum > 10^(-6))
+                p = nextpow2(minimum);
+                D(j) = 1/(2^(p-1));
+            elseif (maximum < 10^(6))
+                p = nextpow2(maximum);
+                D(j) = 1/(2^(p-1));
+            else
+                D(j) = 1;
+            end
+        else
+            D(j) = 1; % Extreme case, where one column is all zeros.
+        end
+    end
+end
+
+% ================================================================================================================ %
+end
+% ******************************************************************************************************************** %
+% END OF FILE
+% ******************************************************************************************************************** %
