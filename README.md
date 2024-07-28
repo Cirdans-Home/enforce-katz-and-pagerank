@@ -1,6 +1,22 @@
-# Enforce Katz and PageRank
+# Enforcing Katz and PageRank Centrality Measures in Complex Networks
 
-Code for enforcing the Katz and PageRank centrality scores.
+We investigate the problem of **enforcing a desired centrality measure** in complex networks, 
+while still keeping the original pattern of the network. Specifically, by representing the 
+network as a graph with suitable nodes and weighted edges, we focus on computing the smallest 
+perturbation on the weights required to obtain a prescribed **PageRank** or **Katz centrality index** 
+for the nodes. By quantifying the least perturbation amount, we gain insights into the properties 
+of the network and can make targeted modifications to achieve specific centrality objectives. 
+Our approach relies on optimization procedures that scale with the size of the network, 
+enabling the exploration of different scenarios and the alteration of network structure 
+and dynamics.
+
+If you use this code or any of the ideas here, please cite the paper:
+```bibtex
+@misc{EnforcePRKATZ
+   title={Enforcing Katz and PageRank Centrality Measures in Complex Networks},
+   author={S. Cipolla, F. Durastante, B. Meini}
+}
+```
 
 ## Collaborators
 
@@ -29,3 +45,6 @@ Their [code](https://gitlab.com/ngillis/TSDP) is included as a submodule of this
 
 Some versions of the solvers can use the [Gurobi](https://www.gurobi.com) solver for the optimization problem. It is possible to get an Academic License for it. If you don't want to use it, this is not required since implementations are written in pure Matlab and don't require external tools.
 
+### Replicating numerical experiments
+
+The `NumericalExamples` folder contains the necessary scripts and instructions to replicate the examples included in the paper.
