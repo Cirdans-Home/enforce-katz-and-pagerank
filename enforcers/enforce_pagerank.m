@@ -25,7 +25,7 @@ end
 
 % General infos
 n              = size(A,1);
-print_mode     = 3;
+print_mode     = 0;
 
 % Build the projector
 proj                = pattern_projector(P);  % Projector Onto the Pattern of A
@@ -109,10 +109,12 @@ if beta == 1
             r               = rhat;
             alphahat   = 1- (1-alpha)/r;
             Phat         = 1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(A+Delta))+(r-1).*speye(n) );
-            varargout{2}     =  (I - alphahat*Phat.')\((1-alphahat).*v) ;
+            picheck     =  (I - alphahat*Phat.')\((1-alphahat).*v) ;
+            varargout{2}     = picheck/sum(picheck); 
         else
             rhat      = 0;
             varargout{2} =  (I - alpha*(spdiags(1./deg,0,n,n)*(A+Delta)).')\((1-alpha).*v) ;
+            varargout{2}     = varargout{2}/sum(varargout{2});
         end
         if nargout >= 4
             varargout{3} = rhat;
@@ -185,6 +187,7 @@ else
     if nargout >= 3
         I              = speye(n,n);
         rhat         = min(diag( spdiags(1./deg,0,n,n)*(A+Delta) ));
+   
 
 
         if rhat < 1e-8
@@ -192,10 +195,12 @@ else
             r               = rhat;
             alphahat   = 1- (1-alpha)/r;
             Phat         = 1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(A+Delta))+(r-1).*speye(n) );
-            varargout{2}     =  (I - alphahat*Phat.')\((1-alphahat).*v) ;
+            picheck     =  (I - alphahat*Phat.')\((1-alphahat).*v) ;
+	    varargout{2} = picheck/sum(picheck);
         else
             rhat      = 0;
-            varargout{2} =  (I - alpha*(spdiags(1./deg,0,n,n)*(A+Delta)).')\((1-alpha).*v) ;
+            picheck =  (I - alpha*(spdiags(1./deg,0,n,n)*(A+Delta)).')\((1-alpha).*v) ;
+            varargout{2}     = picheck/sum(picheck);
         end
         if nargout >= 4
             varargout{3} = rhat;

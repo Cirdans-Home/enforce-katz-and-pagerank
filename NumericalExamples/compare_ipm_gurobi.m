@@ -3,15 +3,19 @@
 % using either the IPM or the GUROBI optimization routines.
 
 clear; clc; close all;
+warning('off','all')
 addpath('../enforcers/')
 addpath('../testmatrices/')
+addpath('/software/gurobi/gurobi1102/linux64/matlab');
+gurobi_setup
 
 % 2 6 13 15
 % PGPgiantcompo ct2010 nh2010 vt2010
 fid = fopen('compare_ipm_gurobi.txt','a+');
 test_matrices = ["PGPgiantcompo","ct2010","nh2010","vt2010"];
-betavals = [1,0.75,0.50,0.25];
+betavals = [1,0.50,1/101,1/201];
 
+fprintf(fid,'\n\n');
 [info,machine] = system('hostname');
 fprintf(fid,'Test %s machine %s',string(datetime("today")),machine);
 
@@ -57,8 +61,8 @@ for i = 1:length(test_matrices)
     for j = 1:length(betavals)
         % Enforce with IPM
         tol  = 1e-9;
-        beta = betavals(i);
-        fprintf(fid,'& %1.2f & ',beta);
+        beta = betavals(j);
+        fprintf(fid,'& %1.4f & ',beta);
         [Delta_IPM,Info_IPM,picheck_IPM,rhat_IPM] = ...
             enforce_pagerank(A,alpha,muhat,v,P,beta,tol);
         [~,ind_ipm] = sort(picheck_IPM,"descend");
@@ -68,20 +72,20 @@ for i = 1:length(test_matrices)
         [~,ind_gu] = sort(picheck_GU,"descend");
         % Populate data
         TIME(i,j,1)         = Info_IPM.time;
-        TAU(i,j,1)          = corr(ind_ipm,ind_muhat,"type","Kendall");
+        TAU(i,j,1)          = corr(picheck_IPM,muhat,"type","Kendall");
         RHAT(i,j,1)         = rhat_IPM;
         ABSDELTANORM(i,j,1) = norm(Delta_IPM,"fro");
         RELDELTANORM(i,j,1) = ABSDELTANORM(i,j,1)/normA;        
-        NNZ(i,j,1)          = nnz(Delta_IPM(abs(Delta_IPM)>1e-10));
+        NNZ(i,j,1)          = nnz(Delta_IPM);
         ITER(i,j,1)         = Info_IPM.IPMiter;
         
         TIME(i,j,2)         = Info_GU.time;
-        TAU(i,j,2)          = corr(ind_gu,ind_muhat,"type","Kendall");
+        TAU(i,j,2)          = corr(picheck_GU,muhat,"type","Kendall");
         RHAT(i,j,2)         = rhat_GU;
         ABSDELTANORM(i,j,2) = norm(Delta_GU,"fro");
         RELDELTANORM(i,j,2) = ABSDELTANORM(i,j,2)/normA;
-        NNZ(i,j,2)          = nnz(Delta_GU(abs(Delta_GU)>1e-10));
-        ITER(i,j,1)         = Info_GU.iter + Info_GU.baritercount;
+        NNZ(i,j,2)          = nnz(Delta_GU);
+        ITER(i,j,2)         = Info_GU.iter + Info_GU.baritercount;
 
         % Save data to table
         fprintf(fid,['%1.2e & %1.2f & %1.2f & %1.2e & %1.2e & %d & %d & ' ...
@@ -105,5 +109,5 @@ for i = 1:length(test_matrices)
 end
 
 fclose(fid);
-save("compare_ipm_gurobi.mat","ITER","NNZ","RELDELTANORM",...
+save("compare_ipm_gurobi2.mat","ITER","NNZ","RELDELTANORM",...
     "ABSDELTANORM","RHAT","TAU","TIME");

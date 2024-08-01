@@ -82,11 +82,13 @@ if beta == 1
             r               = rhat;
             alphahat   = 1- (1-alpha)/r;
             Phat         = 1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(A+Delta))+(r-1).*speye(n) );
-            varargout{2}     =  (I - alphahat*Phat.')\((1-alphahat).*v) ;
-        else
+            picheck    =  (I - alphahat*Phat.')\((1-alphahat).*v) ;
+            varargout{2} = picheck/sum(picheck);
+	else
             rhat      = 0;
-            varargout{2} =  (I - alpha*(spdiags(1./deg,0,n,n)*(A+Delta)).')\((1-alpha).*v) ;
-        end
+            picheck =  (I - alpha*(spdiags(1./deg,0,n,n)*(A+Delta)).')\((1-alpha).*v) ;
+            varargout{2} = picheck/sum(picheck);
+	end
         if nargout >= 4
             varargout{3} = rhat;
         end
@@ -148,11 +150,13 @@ else
             r               = rhat;
             alphahat   = 1- (1-alpha)/r;
             Phat         = 1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(A+Delta))+(r-1).*speye(n) );
-            varargout{2}     =  (I - alphahat*Phat.')\((1-alphahat).*v) ;
-        else
+            picheck     =  (I - alphahat*Phat.')\((1-alphahat).*v) ;
+            varargout{2} = picheck/sum(picheck);
+	else
             rhat      = 0;
-            varargout{2} =  (I - alpha*(spdiags(1./deg,0,n,n)*(A+Delta)).')\((1-alpha).*v) ;
-        end
+            picheck =  (I - alpha*(spdiags(1./deg,0,n,n)*(A+Delta)).')\((1-alpha).*v) ;
+            varargout{2} = picheck/sum(picheck);
+	end
         if nargout >= 4
             varargout{3} = rhat;
         end
