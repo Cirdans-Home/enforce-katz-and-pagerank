@@ -71,6 +71,7 @@ if beta == 1
     % Recover Matrix and Desired Ranking
     [ival,jval,~] = find(P);
     Delta = result.x - g;
+    Delta(abs(Delta)<1e-13)=0;
     Delta = sparse(ival,jval,Delta,n,n);
     % Compute the optimized PageRank centrality
     if nargout >= 3
@@ -140,6 +141,7 @@ else
     % Recover Matrix and Desired Ranking
     [ival,jval,~] = find(P);
     Delta    = result.x(1:reduced_size) -c;
+    Delta(abs(Delta)<1e-13)=0;
     Delta    = sparse(ival,jval,Delta,n,n);
     % Compute the optimized PageRank centrality
     if nargout >= 3
