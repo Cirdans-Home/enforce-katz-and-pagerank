@@ -67,7 +67,7 @@ if beta == 1
         varargout{1}.iter       = result.itercount;
         varargout{1}.baritercount = result.baritercount;
     end
-
+    
     % Recover Matrix and Desired Ranking
     [ival,jval,~] = find(P);
     Delta = result.x - g;
@@ -77,7 +77,7 @@ if beta == 1
     if nargout >= 3
         I              = speye(n,n);
         rhat         = min(diag( spdiags(1./deg,0,n,n)*(A+Delta) ));
-
+        
         if rhat < 1e-8
             rhat          = 1- alpha*rhat;
             r               = rhat;
@@ -85,40 +85,42 @@ if beta == 1
             Phat         = 1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(A+Delta))+(r-1).*speye(n) );
             picheck    =  (I - alphahat*Phat.')\((1-alphahat).*v) ;
             varargout{2} = picheck/sum(picheck);
-	else
+        else
             rhat      = 0;
             picheck =  (I - alpha*(spdiags(1./deg,0,n,n)*(A+Delta)).')\((1-alpha).*v) ;
             varargout{2} = picheck/sum(picheck);
-	end
+        end
         if nargout >= 4
             varargout{3} = rhat;
         end
         if nargout >= 5
             varargout{4} = Phat;
         end
-
+        
     end
-
+    
 else
     % Solving with sparsity constraints
     % Building the GUROBI model
     model.name = 'PageRank-l1-fro';
+    constr_var = setdiff(1:1:reduced_size, free_variables);
     tau = (1-beta)/beta;
     Q   = 2*speye(reduced_size);
     work = spdiags(1./deg,0,n,n)*pihat;
-    L       = [kron(work.',speye(n))*(K*proj.');...
+    L    = [kron(work.',speye(n))*(K*proj.');...
         kron(ones(n,1).',speye(n))*proj.'];
     c       = reshape(A,n*n,1);
     c(free_variables) = 0;
     c        = proj*c;
     b       = [   (1/alpha).*(pihat -(1-alpha).*v) - A.'*(spdiags(1./deg,0,n,n)*pihat)+kron(work.',speye(n))*(K*(proj.'*c) )  ;...
         kron(ones(n,1).',speye(n))*(proj.'*c) ];
-    b        = [b;-c];
-    model.Q  = blkdiag(Q,sparse(reduced_size,reduced_size),sparse(reduced_size,reduced_size));
-    g        = [-2.*c; tau.*ones(reduced_size,1); tau.*ones(reduced_size,1)];
+    b        = [b;-c(constr_var)];
+    model.Q  = blkdiag(Q,sparse(length(constr_var),length(constr_var)),sparse(length(constr_var),length(constr_var)));
+    g        = [-2.*c; tau.*ones(length(constr_var),1); tau.*ones(length(constr_var),1)];
     model.obj = full(g);
-    L   = [L, sparse(2*n,reduced_size), sparse(2*n,reduced_size);...
-        - speye(reduced_size), speye(reduced_size),      -speye(reduced_size)];
+    II        = speye(reduced_size);
+    L        = [L, sparse(2*n,length(constr_var)), sparse(2*n,length(constr_var));...
+        - II(constr_var,:),     speye(length(constr_var)),      -speye(length(constr_var))];
     if (scaling == 1)
         DD = Scale_the_problem(L,scaling_option,scaling_direction);
         L = spdiags(DD,0,size(L,1),size(L,1))*L;  % Apply the left scaling.
@@ -129,7 +131,7 @@ else
     model.lb  = zeros(size(model.A,2),1);
     model.lb(free_variables) = -Inf;
     model.sense = repmat('=',size(model.A,1),1);
-
+    
     % Call GUROBI on the problem to solve
     result = gurobi(model);
     if nargout >= 2
@@ -137,7 +139,7 @@ else
         varargout{1}.iter       = result.itercount;
         varargout{1}.baritercount = result.baritercount;
     end
-
+    
     % Recover Matrix and Desired Ranking
     [ival,jval,~] = find(P);
     Delta    = result.x(1:reduced_size) -c;
@@ -154,11 +156,11 @@ else
             Phat         = 1/(r-1+alpha).*(alpha*(spdiags(1./deg,0,n,n)*(A+Delta))+(r-1).*speye(n) );
             picheck     =  (I - alphahat*Phat.')\((1-alphahat).*v) ;
             varargout{2} = picheck/sum(picheck);
-	else
+        else
             rhat      = 0;
             picheck =  (I - alpha*(spdiags(1./deg,0,n,n)*(A+Delta)).')\((1-alpha).*v) ;
             varargout{2} = picheck/sum(picheck);
-	end
+        end
         if nargout >= 4
             varargout{3} = rhat;
         end
