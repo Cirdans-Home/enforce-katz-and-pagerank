@@ -9,6 +9,7 @@ fprintf("\t%s\n",d.name)
 
 perc = [0.1,0.2,0.3,0.4,0.5];
 betav = [0.8,0.6,0.4,0.2,1];
+ndigits = 6;
 
 Pert = NaN(length(d),length(perc),length(betav)); % Value of the Objective
 Time = NaN(length(d),length(perc),length(betav)); % Time To Solution
@@ -50,7 +51,7 @@ for i=1:length(d)
             NNZ(i,j,k)  = nnz(Delta); % Number of nonzeros in Delta
             NNZp(i,j,k) = nnz(Delta > 0); % Number of pos nonzeros in Delta
             NNZn(i,j,k) = nnz(Delta < 0); % Number of neg nonzeros in Delta
-            KTAU(i,j,k) = corr(mucheck,muhat,'type','Kendall');
+            KTAU(i,j,k) = corr(round(mucheck,ndgits),round(muhat,ndigits),'type','Kendall');
         end
     end
 
