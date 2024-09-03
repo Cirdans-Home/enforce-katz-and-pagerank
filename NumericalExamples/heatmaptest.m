@@ -2,7 +2,6 @@
 
 clear; clc; close all;
 
-addpath("../enforcers");
 QP_problems_path = "../testmatrices/";
 d = dir(fullfile(QP_problems_path,'*.mat')); 
 fprintf("Test matrices are: \n")
