@@ -12,22 +12,28 @@ load('heatmapresults.mat')
 QP_problems_path = "../testmatrices/";
 d = dir(fullfile(QP_problems_path,'*.mat')); 
 
+% Data:
+perc = [0.1,0.2,0.3,0.4,0.5];
+betav = [0.8,0.6,0.4,0.2,1];
+
 
 nnzA = zeros(length(d),1);
+JA = zeros(length(perc),length(betav));
 for i = 1:length(d)
     load(fullfile(QP_problems_path,d(i).name));
     A = Problem.A;
     nnzA(i) = nnz(A);
+    for j = 1:length(betav)
+        JA(i,j) = betav(j)*norm(A,"fro")^2 + (1-betav(j))*norm(A,1);
+    end
 end
 
-perc = [0.1,0.2,0.3,0.4,0.5];
-betav = [0.8,0.6,0.4,0.2,1];
 
 % Performances in term of the objective function
 figure('Position',[958 838 1220 287],'Name',"Objective Function")
 for i=1:5
     subplot(1,5,i)
-    heatmap(log10(Pert(:,:,i)), ...
+    heatmap(log10(Pert(:,:,i)./JA), ...
         "Colormap",turbo(30),...
         "XData",perc, ...
         "XLabel","Fraction of top nodes averaged", ...
