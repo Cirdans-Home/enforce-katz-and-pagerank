@@ -3,12 +3,13 @@
 clear all;
 close all;
 clc;
-%addpath('../export_fig')
+addpath('../Centrality_Forcing_IPM/');
 %The path on which all the Graphs are:
 QP_problems_path = '../testmatrices'; 
 
 %Finds all the Netlib problems and stores their names in a struct
 d = dir(fullfile(QP_problems_path,'*.mat')); 
+ndigits = 6;
 
 
 % addpath('/Users/stefanocipolla/Library/CloudStorage/OneDrive-UniversityofSouthampton/Southampton_Work/Force_Ranking/export_fig')
@@ -135,7 +136,7 @@ for k =  5%1:length(d)
      % Compute the optimizate Katz centrality
      mufinal = (I - alpha*(Problem.A+xfinal))\e;
      % Compute Correlations
-      [K_1,~]    = corr(mufinal,muhat_1,'type','Kendall');
+      [K_1,~]    = corr(round(mufinal,ndigits),round(muhat_1,ndigits),'type','Kendall');
       % [rbo_1,~] = rbosimilarity(mufinal,muhat_1,0.1);
      % Print Details
      if (opt == 1)
@@ -188,7 +189,7 @@ for k =  5%1:length(d)
      % Compute the optimizate Katz centrality
      mufinal = (I - alpha*(Problem.A+xfinal))\e;
      % Compute Correlations
-      [K_1,~]    = corr(mufinal,muhat_2,'type','Kendall');
+      [K_1,~]    = corr(round(mufinal,ndigits),round(muhat_2,ndigits),'type','Kendall');
      % [rbo_1,~] = rbosimilarity(mufinal,muhat_2,0.1);
      % Print Details
      if (opt == 1)
@@ -250,7 +251,7 @@ for k =  5%1:length(d)
     % Compute the optimizate Katz centrality
     mufinal_L1      = (I - alpha*(Problem.A+xfinal_L1))\e;
      % Compute Correlations
-      [K_1_L1,~]    = corr(mufinal_L1,muhat_1,'type','Kendall');
+      [K_1_L1,~]    = corr(round(mufinal_L1,ndigits),round(muhat_1,ndigits),'type','Kendall');
       %[rbo_1_L1,~] = rbosimilarity(mufinal_L1,muhat_1,0.1);
      % Print Details
      if (opt == 1)
@@ -307,7 +308,7 @@ for k =  5%1:length(d)
     % Compute the optimizate Katz centrality
     mufinal_L1      = (I - alpha*(Problem.A+xfinal_L1))\e;
      % Compute Correlations
-      [K_1_L1,~]    = corr(mufinal_L1,muhat_2,'type','Kendall');
+      [K_1_L1,~]    = corr(round(mufinal_L1,ndigits),round(muhat_2,ndigits),'type','Kendall');
       %[rbo_1_L1,~] = rbosimilarity(mufinal_L1,muhat_2,0.1);
      % Print Details
      if (opt == 1)
