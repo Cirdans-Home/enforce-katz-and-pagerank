@@ -51,6 +51,7 @@ plot(1:n,pi,'b--',1:n,pihat,1:n,picheck,'ko','LineWidth',2)
 xlim([1 n])
 title('PageRank IPM')
 legend({'$\pi$','$\hat{\pi}$','Optimized $\hat{\pi}$ IPM'},'Interpreter','latex','Location','eastoutside')
+fprintf('IPM rhat is %e\n',rhat);
 
 %% Use the GUROBI routine to obtain it
 beta = 0.2;
@@ -67,6 +68,7 @@ semilogy(1:n,abs(pihat-picheck),'-',1:n,abs(pihat-picheck_gu),'--','LineWidth',2
 title('Absolute Error')
 xlim([1 n])
 legend({'IPM','GUROBI'},'Location','eastoutside')
+fprintf('Gurobi rhat is %e\n',rhat_gu);
 
 %% Use the TDSP method (No target)
 [D_not,results_not,model_not,timings_not] = supportTSDP(G,pihat);

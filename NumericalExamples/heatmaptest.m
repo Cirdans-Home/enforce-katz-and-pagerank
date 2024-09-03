@@ -2,6 +2,7 @@
 
 clear; clc; close all;
 
+addpath("../enforcers");
 QP_problems_path = "../testmatrices/";
 d = dir(fullfile(QP_problems_path,'*.mat')); 
 fprintf("Test matrices are: \n")
@@ -51,7 +52,7 @@ for i=1:length(d)
             NNZ(i,j,k)  = nnz(Delta); % Number of nonzeros in Delta
             NNZp(i,j,k) = nnz(Delta > 0); % Number of pos nonzeros in Delta
             NNZn(i,j,k) = nnz(Delta < 0); % Number of neg nonzeros in Delta
-            KTAU(i,j,k) = corr(round(mucheck,ndgits),round(muhat,ndigits),'type','Kendall');
+            KTAU(i,j,k) = corr(round(mucheck,ndigits),round(muhat,ndigits),'type','Kendall');
         end
     end
 
