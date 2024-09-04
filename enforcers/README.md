@@ -70,6 +70,28 @@ instances of the problem with the algorithms described in the Paper.
    %           Delta perturbation from Proposition 4.1
    %           fronorm = ||G - Ghat||_F
    ```
+- `enforce_pagerank_gurobi.m`
+  ```matlab
+  %ENFORCE PAGERANK Given a matrix A and a parameter alpha finds a matrix Delta
+  %with pattern P such that:
+  %    (I- alpha ( diag(A1)^{-1}(A+Delta))^T)pihat = (1-alpha)v
+  %    Delta 1 = 0
+  %    offdiagonal(A+Delta) >=0
+  %    --> and  beta \|\Delta\|_F^2 + (1-beta) \|\Delta\|_1 minimal
+  %   INPUT A sparse matrix
+  %         alpha such that A is irreducible
+  %         pihat desired vector of pagerank with e^Tpihat=1
+  %         P pattern matrix
+  %           beta scalar in (0,1) regulating the objective function
+  %   OUTPUT Delta perturbation matrix
+  %          stat structure containing statistics
+  %          picheck vector of centralities computed with the perturbed
+  %          matrix, in principle should be equal to the pihat entry
+  %          rhat shift parameter to enforce positive diagonal entries, may be zero
+  %          Phat modified probability transition matrix
+  %
+  ```
+
 
 > [!TIP]
 > These versions are useful to have the code in a standalone way, to work 
