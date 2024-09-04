@@ -46,7 +46,7 @@ Struct                           = struct();
 Struct.Fact                   = 'chol';
 rho                               = 1e-12;
 delta                             = rho;
-for k = 3%1:length(d)
+for k = 1:length(d)
    model       = struct();
    load(fullfile(QP_problems_path,d(k).name));
    model.name = d(k).name
