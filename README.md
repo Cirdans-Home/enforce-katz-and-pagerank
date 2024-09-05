@@ -12,9 +12,14 @@ and dynamics.
 
 If you use this code or any of the ideas here, please cite the paper:
 ```bibtex
-@misc{EnforcePRKATZ
-   title={Enforcing Katz and PageRank Centrality Measures in Complex Networks},
-   author={S. Cipolla, F. Durastante, B. Meini}
+@misc{cipolla2024enforcingkatzpagerankcentrality,
+      title={Enforcing Katz and PageRank Centrality Measures in Complex Networks}, 
+      author={Stefano Cipolla and Fabio Durastante and Beatrice Meini},
+      year={2024},
+      eprint={2409.02524},
+      archivePrefix={arXiv},
+      primaryClass={physics.soc-ph},
+      url={https://arxiv.org/abs/2409.02524}, 
 }
 ```
 
