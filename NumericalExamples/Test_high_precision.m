@@ -4,18 +4,13 @@ clear; clc; close all;
 
 addpath('/opt/matlabauxiliaries/advanpix-4.8.0/')
 
-mp.Digits(64); % Set quadruple precision
+mp.Digits(71); % Set quadruple precision
 addpath("../enforcers/"); % Add the folder containing the enforcers
 load('../matrices/karate.mat');
 
 tolvec = mp([1e-9,1e-12,1e-15,1e-18,1e-21,1e-24,1e-27,1e-30,1e-33,1e-36,1e-39,1e-42,1e-45]);
-nnzvec = [];
-normvec = [];
-relnormvec = [];
+betavec = [1,0.5];
 
-nnzvec_std = [];
-normvec_std = [];
-relnormvec_std = [];
 
 A = mp(abs(Problem.A));
 N = size(A,1);
@@ -38,7 +33,15 @@ muhat(5) = mp(1.5)*mu(5);
 % Pattern to be used
 P = mp(spones(A));
 
-beta = mp(0.5);
+for i = 1:2
+beta = mp(betavec(i));
+nnzvec = [];
+normvec = [];
+relnormvec = [];
+
+nnzvec_std = [];
+normvec_std = [];
+relnormvec_std = [];
 for tol = tolvec
     fprintf("Testing tolerance %e.\n",tol)
 
@@ -62,12 +65,18 @@ end
 
 %% Visualize results
 figure(1)
+subplot(1,2,i)
 semilogy(1:length(normvec),normvec,...
     1:length(relnormvec),relnormvec,...
     1:length(normvec_std),normvec_std,...
     1:length(normvec),tolvec(1:length(normvec)),'--','LineWidth',2)
 ylabel('Error on Katz centrality vector')
+if i == 1
 legend({'Augmented precision (abs)','Augmented precision (rel)',...
-    'Double precision','Tolerance'},'Location','westoutside')
+    'Double precision','Tolerance'},'Location','northeast')
+end
 xticks(1:length(relnormvec))
 xticklabels(split(sprintf("%1.1e\n",tolvec(1:length(relnormvec)))))
+axis tight
+title(sprintf('$\\beta = %1.2f$',betavec(i)),'Interpreter','latex')
+end
