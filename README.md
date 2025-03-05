@@ -50,6 +50,10 @@ Their [code](https://gitlab.com/ngillis/TSDP) is included as a submodule of this
 
 Some versions of the solvers can use the [Gurobi](https://www.gurobi.com) solver for the optimization problem. It is possible to get an Academic License for it. If you don't want to use it, this is not required since implementations are written in pure Matlab and don't require external tools.
 
+### ADVANPIX (Optional)
+
+Some versions of the solvers can be run in augmented precision by means of the [ADVANPIX: Multiprecision Computing Toolbox for MATLAB](https://www.advanpix.com/). The relevant experiments are only contained in the supplementary material of the paper, and are intended as a check of the impact of numerical conditioning of IPM matrices. In general it cannot be used for large-scale problems due to the increased computational cost of working in multiple precision.
+
 ### Replicating numerical experiments
 
 The `NumericalExamples` folder contains the necessary scripts and instructions to replicate the examples included in the paper.

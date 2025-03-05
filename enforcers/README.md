@@ -105,3 +105,10 @@ instances of the problem with the algorithms described in the Paper.
 > it is possible to get an Academic License for it. If you don't want to use, the 
 > `enforce_katz.m` implementation is written in pure Matlab and doesn't require external 
 > tools.
+
+## Augmented precision
+
+The two routines
+- `enforce_katz_hp.m`
+- `enforce_pagerank_hp.m`
+can be called in the same way as the two corresponding routines that use double precision, but require the use of [ADVANPIX: Multiprecision Computing Toolbox for MATLAB](https://www.advanpix.com/). They are intended for the theoretical study of some properties of numerical error propagation within IPM methods and not for the solution of routines, in particular not for the solution of large-scale problems.

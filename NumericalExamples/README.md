@@ -7,6 +7,7 @@ This folder contains the MATLAB scripts needed to reproduce the numerical experi
 - `Test_Katz_Forcing.m` produces the Scenarios 1 and 2 test for the Katz centrality measure
 - `Test_PR_Forcing.m` produces the Scenarios 1 and 2 test for the PageRank centrality measure
 - `comparison_with_TSDP.m` runs the comparison with the TSDP algorithm.
+- `Test_high_precision.m` runs the test with multiprecision arithmetics.
 
 
 > [!IMPORTANT]  
@@ -17,6 +18,10 @@ This folder contains the MATLAB scripts needed to reproduce the numerical experi
 > Comparison with the TSDP algorithm requires cloning the repository with the 
 > `--recurse-submodules` option, see the information in the 
 > [main README](https://github.com/Cirdans-Home/enforce-katz-and-pagerank/blob/main/README.md) of the repository.
+
+> [!NOTE]
+> The _high precision_ test require the [ADVANPIX: Multiprecision Computing Toolbox for MATLAB](https://www.advanpix.com/),
+> see the information in the [main README](https://github.com/Cirdans-Home/enforce-katz-and-pagerank/blob/main/README.md) of the repository.
 
 ## Toeplitz
 
