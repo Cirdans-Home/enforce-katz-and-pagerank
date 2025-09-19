@@ -12,14 +12,21 @@ and dynamics.
 
 If you use this code or any of the ideas here, please cite the paper:
 ```bibtex
-@misc{cipolla2024enforcingkatzpagerankcentrality,
-      title={Enforcing Katz and PageRank Centrality Measures in Complex Networks}, 
-      author={Stefano Cipolla and Fabio Durastante and Beatrice Meini},
-      year={2024},
-      eprint={2409.02524},
-      archivePrefix={arXiv},
-      primaryClass={physics.soc-ph},
-      url={https://arxiv.org/abs/2409.02524}, 
+@article{cipolla2024enforcingkatzpagerankcentrality,
+    AUTHOR = {Cipolla, Stefano and Durastante, Fabio and Meini, Beatrice},
+     TITLE = {Enforcing {K}atz and {P}age{R}ank {C}entrality {M}easures in
+              {C}omplex {N}etworks},
+   JOURNAL = {SIAM J. Math. Data Sci.},
+  FJOURNAL = {SIAM Journal on Mathematics of Data Science},
+    VOLUME = {7},
+      YEAR = {2025},
+    NUMBER = {3},
+     PAGES = {1514--1539},
+      ISSN = {2577-0187},
+   MRCLASS = {99-06},
+  MRNUMBER = {4959962},
+       DOI = {10.1137/24M1690849},
+       URL = {https://doi.org/10.1137/24M1690849},
 }
 ```
 
